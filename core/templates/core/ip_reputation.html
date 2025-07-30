@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+
+{% block title %}IP reputation Check{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>IP Reputation Check</h1>
+
+        <form method="POST">
+        {% csrf_token %}
+            <div>
+                <label for="ip">Enter IP for check: </label>
+                <input id="ip" name="ip" type="text" />
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
+        {% if results %}
+
+        {% elif error %}
+            <p>{{ error }}</p>
+        {% endif %}
+    </div>
+{% endblock %}

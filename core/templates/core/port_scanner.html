@@ -1,0 +1,47 @@
+{% extends "core/base.html" %}
+
+{% block title %}Port Scanner{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Port Scanner</h1>
+
+        <form method="POST">
+        {% csrf_token %}
+
+            <div>
+              <label for="target">Target IP or Hostname:</label>
+              <input type="text" id="target" name="target" required/>
+            </div>
+
+            <div>
+              <label for="port_range">Port Range (e.g. 1-1024):</label>
+              <input type="text" id="port_range" name="port_range" placeholder="Optional"/>
+            </div>
+
+            <div>
+              <button type="submit">
+                Scan
+              </button>
+            </div>
+        </form>
+
+        {% if results %}
+            <div>
+                <h2>Scan Results</h2>
+                <ul>
+                {% for port, status in results.items %}
+                    <li>
+                        Port {{ port }}:
+                        <span>{{ status }}</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% elif error %}
+            <p>{{ error }}</p>
+        {% elif request.method == "POST" %}
+            <p>No open ports found in the selected range.</p>
+        {% endif %}
+    </div>
+{% endblock %}

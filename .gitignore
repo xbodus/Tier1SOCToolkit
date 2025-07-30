@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ========== Virtual Environments ==========
+.venv/
+venv/
+ENV/
+env/
+
+# Django
+*.sqlite3
+.env
+!.env.example
+static/
+media/
+
+# ========== Logs and Outputs ==========
+*.log
+logs/
+
+# PyCharm
+.idea/
+.vscode/
+
+# ========== Distribution / Packaging ==========
+build/
+dist/
+*.egg-info/
+.eggs/
+*.whl
+
+# ========== System Files ==========
+.DS_Store
+Thumbs.db
