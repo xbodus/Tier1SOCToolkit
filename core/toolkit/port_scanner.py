@@ -14,7 +14,7 @@ def scan_port(target: str, port: int) -> int|None:
             if result == 0:
                 return port
 
-        except Exception:
+        except socket.gaierror:
             return None
 
 

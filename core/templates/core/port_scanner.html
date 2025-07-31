@@ -6,6 +6,7 @@
     <div>
         <h1>Port Scanner</h1>
 
+        <p>Legal test scan targets: 127.0.0.1 or scanme.nmap.org</p>
         <form method="POST">
         {% csrf_token %}
 
@@ -30,13 +31,13 @@
             <div>
                 <h2>Scan Results</h2>
                 <ul>
-                {% for port, status in results.items %}
+                {% for port in results %}
                     <li>
-                        Port {{ port }}:
-                        <span>{{ status }}</span>
+                        Port {{ port }}: Open
                     </li>
                 {% endfor %}
                 </ul>
+                <p>Time elapsed: {{ status.seconds }} seconds</p>
             </div>
         {% elif error %}
             <p>{{ error }}</p>

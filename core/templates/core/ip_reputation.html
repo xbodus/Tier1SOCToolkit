@@ -6,17 +6,37 @@
     <div>
         <h1>IP Reputation Check</h1>
 
+        <p>Test IP: 185.220.101.1</p>
         <form method="POST">
         {% csrf_token %}
             <div>
                 <label for="ip">Enter IP for check: </label>
                 <input id="ip" name="ip" type="text" />
+                <label for="enrich">Enrich IP data: </label>
+                <input id="enrich" name="enrich" type="checkbox">
             </div>
             <button type="submit">Submit</button>
         </form>
 
         {% if results %}
-
+            <h2>Reputation Results</h2>
+            <h3>
+                {% if results.malicious %}
+                    Potential Malicious IP: {{ ip }}({{ results.confidence_score }}) - Reported {{ results.total_reports }} times
+                {% else %}
+                    IP Reports Non-Malicious: {{ ip }}({{ results.confidence_score }}) - Reported {{ results.total_reports }} times
+                {% endif %}
+            </h3>
+            {% if results.enriched_data %}
+                <h4>Geo Data:</h4>
+                <ul>
+                    <li>Country: {{ results.enriched_data.country }}</li>
+                    <li>Continent Code: {{ results.enriched_data.continent_code }}</li>
+                    <li>ASN: {{ results.enriched_data.asn }}</li>
+                    <li>Org: {{ results.enriched_data.org }}</li>
+                    <li>Domain: {{ results.enriched_data.as_domain }}</li>
+                </ul>
+            {% endif %}
         {% elif error %}
             <p>{{ error }}</p>
         {% endif %}
