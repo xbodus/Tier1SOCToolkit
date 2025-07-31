@@ -1,5 +1,3 @@
-import environ
-import os
 import requests
 
 from SOCTeir1Toolkit_CapstoneProject.settings import env

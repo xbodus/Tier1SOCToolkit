@@ -61,28 +61,21 @@ def port_scanner(request):
 
 
 def ip_reputation(request):
-    error = None
     if request.method == "POST":
         ip = request.POST.get("ip", "")
-        enrich = request.POST.get("enrich", False)
+        enrich = "enrich" in request.POST
+
         try:
-            try:
-                is_valid_target(ip)
-            except (ipaddress.AddressValueError, OSError) as e:
-                error = e
-                raise ValueError
+            is_valid_target(ip)
+        except (ipaddress.AddressValueError, OSError) as e:
+            return render(request, "core/ip_reputation.html", {"error": str(e)})
 
-            results = ip_check(ip, enrich)
-            context = {
-                "ip": ip,
-                "results": results
-            }
-        except ValueError:
-            context = {
-                "error": error
-            }
+        results = ip_check(ip, enrich)
+        context = {
+            "ip": ip,
+            "results": results
+        }
 
-        print(context)
         return render(request, "core/ip_reputation.html", context)
 
     return render(request, "core/ip_reputation.html")
