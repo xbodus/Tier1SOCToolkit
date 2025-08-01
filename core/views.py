@@ -4,6 +4,7 @@ import ipaddress
 from .toolkit.port_scanner import threaded_port_scan
 from .toolkit.ip_reputation_checker import ip_check
 from .toolkit.utils import is_valid_target
+from .toolkit.log_analyzer import parse_log
 # Create your views here.
 
 
@@ -79,3 +80,23 @@ def ip_reputation(request):
         return render(request, "core/ip_reputation.html", context)
 
     return render(request, "core/ip_reputation.html")
+
+
+
+def log_analyzer(request):
+    if request.method == "POST":
+        if "file" in request.FILES:
+            file = request.FILES['file']
+            start_time = datetime.now()
+            data = parse_log(file)
+            elapsed = start_time - datetime.now()
+
+            context = {
+                "results" : data,
+                "total": len(data),
+                "elapsed": elapsed,
+            }
+
+            return render(request, "core/log_analyzer.html", context)
+
+    return render(request, "core/log_analyzer.html")

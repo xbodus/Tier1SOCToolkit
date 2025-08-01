@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+
+{% block title %}Log Analyzer{% endblock %}
+
+{% block content %}
+    <div>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label for="file">Upload log file to analyze: </label>
+            <input id="file" name="file" type="file" accept=".log">
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    {% if results %}
+        <div>
+            <h2>Analysis Complete: {{ total }} Potential Malicious Alerts Found</h2>
+            {% for result in results %}
+                <p>Alert {{ forloop.counter }}: {{ result.malicious_ip.ip }} found at {{ result.timestamp }} reported malicious.</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
