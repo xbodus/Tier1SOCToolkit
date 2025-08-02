@@ -84,11 +84,32 @@ def init_db():
        CREATE TABLE IF NOT EXISTS request_log
        (
            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-           date       TEXT NOT NULL,
            ip_address TEXT NOT NULL,
+           label      TEXT NOT NULL,
+           ports      TEXT NOT NULL,
            timestamp  TEXT NOT NULL
        );
        """)
+
+    """
+    malicious_ips
+        🚨 Purpose: Cache of confirmed-bad IPs.
+        
+        ✅ Your logic checks this first before hitting the API. If the IP is already marked malicious, you skip the API and pull from this table instead.
+        
+        Should have: ip_address, threat_level, abuse_score, confidence, categories, timestamp, etc.
+        
+        ✅ Should have a UNIQUE constraint on ip_address.
+    """
+    cursor.execute("""
+                   CREATE TABLE IF NOT EXISTS malicious_ips
+                   (
+                       id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                       date       TEXT NOT NULL,
+                       ip_address TEXT NOT NULL,
+                       timestamp  TEXT NOT NULL
+                   );
+                   """)
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS daily_request_count (
