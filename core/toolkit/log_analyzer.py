@@ -2,7 +2,6 @@ import re, sqlite3
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from .ip_reputation_checker import ip_check
-from .utils import init_db
 
 
 
@@ -147,7 +146,6 @@ def check_in_db(ip):
     conn = sqlite3.connect("abuseIPDB_tracker.db")
     cursor = conn.cursor()
 
-    ip = "192.168.1.1"
     cursor.execute("""
                    SELECT EXISTS (SELECT 1
                                   FROM malicious_ips
@@ -209,6 +207,7 @@ def parse_log(file):
     store_in_db(log_lines)
 
     malicious_results = threaded_ip_check(log_lines)
+    print(malicious_results)
 
     # parsed_data = []
     # for malicious_line in malicious_results:
