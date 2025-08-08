@@ -1,7 +1,11 @@
-import re, sqlite3
+import re
 from concurrent.futures.thread import ThreadPoolExecutor
+from datetime import date
 
 from .ip_reputation_checker import ip_check
+from core.models import DailyRequests, ReportedMalicious, Requests
+from django.db import DatabaseError
+from django.db.models import F
 
 
 
@@ -90,95 +94,107 @@ def parse_data(line):
     }
 
 
-# Store log data to db
-def store_in_db(log_lines):
-    conn = sqlite3.connect("abuseIPDB_tracker.db")
-    cursor = conn.cursor()
-    try:
-        rows_to_insert = []
-        for line in log_lines:
-            parsed_data = parse_data(line)
-            ports_str = ""
+def check_daily_count():
+    request = DailyRequests.objects.filter(date=date.today()).first()
+    if request:
+        count = request.count
+        return count
+    return 0
 
-            for port in parsed_data.get("ports", []):
-                ports_str += f"{port.get('label', '')} {port.get('port', '')} "
 
-            for ip in parsed_data.get("ips",[]):
-                label = ip.get("label", "")
-                ip = ip.get("ip", "")
-                timestamp = parsed_data.get("timestamp", "Timestamp Error")
+def update_daily_requests():
+    today = date.today()
 
-                rows_to_insert.append((ip, label, ports_str.strip(), timestamp))
+    obj, created = DailyRequests.objects.get_or_create(date=today, defaults={'count': 0})
 
-        cursor.executemany(
-            """
-            INSERT INTO request_log (ip_address, label, ports, timestamp)
-            VALUES (?, ?, ?, ?)
-            """,
-            rows_to_insert
-        )
-        conn.commit()
-
-    except sqlite3.IntegrityError as e:
-        print(f"Integrity error (duplicate key or constraint failed): {e}")
-        conn.rollback()
-
-    except sqlite3.OperationalError as e:
-        print(f"Operational error (e.g., bad SQL, missing table): {e}")
-        conn.rollback()
-
-    except sqlite3.ProgrammingError as e:
-        print(f"Programming error (e.g., bad API use): {e}")
-        conn.rollback()
-
-    except sqlite3.DatabaseError as e:
-        print(f"General database error: {e}")
-        conn.rollback()
-    finally:
-        conn.close()
+    if not created:
+        # increment count by 1 atomically if exists
+        DailyRequests.objects.filter(date=today).update(count=F('count') + 1)
+    else:
+        # newly created record, set count to 1
+        obj.count = 1
+        obj.save()
 
     return
 
 
+# Store AbuseIPDB request in database
+def store_request(parsed_data, is_malicious):
+    ports_str = ""
+    for port in parsed_data.get("ports", []):
+        ports_str += f'{port.get("label", "")}: {port.get("port", "")} '
+    try:
+        Requests.objects.create(
+            ip_address=parsed_data.get("ip", "IP Error"),
+            label=parsed_data.get("label", "Label Error"),
+            ports=ports_str.strip(),
+            timestamp=parsed_data.get("timestamp", "Timestamp Error"),
+            reported_malicious=True if is_malicious else False
+        )
+    except DatabaseError as e:
+        print(f"Database Error: {e}")
 
-# Check if ip is already logged in malicious_ip table
-def check_in_db(ip):
-    conn = sqlite3.connect("abuseIPDB_tracker.db")
-    cursor = conn.cursor()
+    return
 
-    cursor.execute("""
-                   SELECT EXISTS (SELECT 1
-                                  FROM malicious_ips
-                                  WHERE ip_address = ?);
-                   """, (ip,))
 
-    exists = cursor.fetchall()[0]
-    if exists:
-        return True
+# Check if IP is already in ReportedMalicious table
+def reported_malicious(ip):
+    in_db = ReportedMalicious.objects.filter(ip_address=ip).exists()
+    return in_db
 
-    return False
 
+# ip_address, abuse_confidence_score, country_code, isp, last_reported_at
+def store_malicious(abuse_data):
+    try:
+        ReportedMalicious.objects.create(
+            ip_address= abuse_data.get("data", {}).get("ipAddress", "IP Address Error"),
+            abuse_confidence_score= abuse_data.get("data", {}).get("abuseConfidenceScore", "ACS Error"),
+            country_code= abuse_data.get("data", {}).get("countryCode", "CC Error"),
+            isp= abuse_data.get("data", {}).get("isp", "ISP Error"),
+            last_reported_at= abuse_data.get("data", {}).get("lastReportedAt", "Last Reported Error")
+        )
+    except DatabaseError as e:
+        print(f"Database Error: {e}")
+    return
 
 
 # Helper function for threaded ip check
 def filter_malicious(line):
-    ips = parse_for_ips(line)
     """
-        What we need to do is check the db (malicious_ips table) prior to making a request to the abuseIPDB api.
-        If the ip is in the malicious_ips table, then we'll return the data from the db, else we make the request to abuseIPDB and store that response to the malicious_ip table. 
+        Check the ip and store the request
+        !If ip is already stored in ReportedMalicious, pull data from the db and don't make a new request
     """
-    malicious_lines = []
-    for ip in ips:
-        in_db = check_in_db(ip)
-        if not in_db:
-            check = ip_check(ip.get("ip", ""))
-            if check.get("malicious", ""):
-                malicious_lines.append({
-                    "line": line,
-                    "malicious_ip": ip
-                })
+    parsed_data = parse_data(line)
 
-    return malicious_lines
+    malicious_ips = []
+    for ip in parsed_data.get("ips", []):
+        in_database = reported_malicious(ip)
+        check = False
+
+        if in_database:
+            malicious_ips.append(ip)
+        else:
+            daily_count = check_daily_count()
+            if daily_count >= 1000:
+                return f"AbuseIPDB request limit reached for the day {date.today()} resets at 12AM EST"
+
+            check = ip_check(ip.get("ip", ""))
+            is_malicious = check.get("malicious", False)
+            update_daily_requests()
+            if is_malicious:
+                malicious_ips.append(ip)
+                store_malicious(check.get("data", {}))
+
+        store_request(ip, check.get("malicious", False))
+
+    if malicious_ips:
+        return {
+            "line": line,
+            "malicious_ips": malicious_ips
+        }
+
+    return None
+
 
 
 
@@ -202,9 +218,7 @@ def threaded_ip_check(log_lines):
 
 # Main parser
 def parse_log(file):
-    init_db()
     log_lines = read_file(file)
-    store_in_db(log_lines)
 
     malicious_results = threaded_ip_check(log_lines)
     print(malicious_results)

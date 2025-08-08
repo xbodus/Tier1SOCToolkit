@@ -8,6 +8,11 @@ class DailyRequests(models.Model):
     date = models.DateField(default=date.today)
     count = models.IntegerField()
 
+    class Meta:
+        verbose_name = "Daily Request"
+        verbose_name_plural = "Daily Requests"
+
+
 
 class ReportedMalicious(models.Model):
     ip_address = models.GenericIPAddressField(verbose_name="IP Address", unique=True)
@@ -18,6 +23,11 @@ class ReportedMalicious(models.Model):
 
     def __str__(self):
         return f"{self.ip_address} (Malicious)"
+
+    class Meta:
+        verbose_name = "Reported Malicious IP"
+        verbose_name_plural = "Reported Malicious IPs"
+
 
 
 class Requests(models.Model):
@@ -30,4 +40,7 @@ class Requests(models.Model):
     def __str__(self):
         return f"{self.ip_address} @ {self.timestamp}"
 
+    class Meta:
+        verbose_name = "Request Log"
+        verbose_name_plural = "Request Logs"
 

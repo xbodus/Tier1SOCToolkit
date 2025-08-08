@@ -44,19 +44,11 @@ def ip_check(ip: str, enrich = False) -> dict:
     request = requests.get(url, params=params, headers=headers)
     data = request.json()
 
-    ip_data = {}
-    if data.get("data", {}).get("abuseConfidenceScore", "") > 40:
-        ip_data.update({
-            "malicious": True,
-            "confidence_score": data.get("data", "Error accessing data").get("abuseConfidenceScore", "Confidence score not found"),
-            "total_reports": data.get("data", "Error accessing data").get("totalReports", "Total reports not found")
-        })
-    else:
-        ip_data.update({
-            "malicious": False,
-            "confidence_score": data.get("data", "Error accessing data").get("abuseConfidenceScore", "Confidence score not found"),
-            "total_reports": data.get("data", "Error accessing data").get("totalReports", "Total reports not found")
-        })
+    ip_data = {
+            "malicious": True if data.get("data", {}).get("abuseConfidenceScore", 0) >= 40 else False,
+            "data": data
+        }
+
 
     if enrich:
         data = enrich_data(ip)
