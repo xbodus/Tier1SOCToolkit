@@ -205,7 +205,7 @@ def filter_malicious(line):
 
         store = {
             "ip": ip,
-            "label": ip,
+            "label": label,
             "timestamp": parsed_data.get("timestamp", "Timestamp Error"),
             "ports": parsed_data.get("ports", []),
         }
@@ -247,14 +247,13 @@ def parse_log(file):
 
     malicious_results = threaded_ip_check(log_lines)
 
-    formatted_data = []
+    agg = {}
     for result in malicious_results:
-        line = result.get("line", "")
-        for data in result.get("malicious_ips", []):
-            ip = data.get("ip_address", "")
-
-            if not formatted_data:
-                new_format = {
+        line = result["line"]
+        for data in result["malicious_ips"]:
+            ip = data["ip_address"]
+            if ip not in agg:
+                agg[ip] = {
                     "ip": ip,
                     "data": {
                         "abuse_confidence_score": data.get("abuse_confidence_score", "ACS Error"),
@@ -262,16 +261,13 @@ def parse_log(file):
                         "isp": data.get("isp", "ISP Error"),
                         "last_reported_at": data.get("last_reported_at", "Last Reported Error")
                     },
-                    "lines": [line],
-                    "seen": 1
+                    "lines": [],
+                    "seen": 0
                 }
-                formatted_data.append(new_format)
-            else:
-                for new_data in formatted_data:
-                    if ip in new_data.values():
-                        new_data["lines"].append(line)
-                        new_data["seen"] += 1
+            agg[ip]["lines"].append(line)
+            agg[ip]["seen"] += 1
 
+    formatted_data = list(agg.values())
 
     return formatted_data
 
