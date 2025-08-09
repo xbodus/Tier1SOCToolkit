@@ -1,4 +1,5 @@
 import re
+import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import date
 
@@ -6,7 +7,7 @@ from django.forms import model_to_dict
 
 from .ip_reputation_checker import ip_check
 from core.models import DailyRequests, ReportedMalicious, Requests
-from django.db import DatabaseError
+from django.db import transaction, OperationalError, DatabaseError
 from django.db.models import F
 
 
@@ -106,17 +107,23 @@ def check_daily_count():
 
 def update_daily_requests():
     today = date.today()
-
-    obj, created = DailyRequests.objects.get_or_create(date=today, defaults={'count': 0})
-
-    if not created:
-        # increment count by 1 atomically if exists
-        DailyRequests.objects.filter(date=today).update(count=F('count') + 1)
-    else:
-        # newly created record, set count to 1
-        obj.count = 1
-        obj.save()
-
+    retries = 5
+    while retries:
+        try:
+            with transaction.atomic():
+                obj, created = DailyRequests.objects.get_or_create(
+                    date=today,
+                    defaults={'count': 1}
+                )
+                if not created:
+                    DailyRequests.objects.filter(pk=obj.pk).update(count=F('count') + 1)
+            break
+        except OperationalError as e:
+            if "database is locked" in str(e):
+                time.sleep(0.5)  # wait and retry
+                retries -= 1
+            else:
+                raise
     return
 
 
@@ -243,13 +250,10 @@ def parse_log(file):
     formatted_data = []
     for result in malicious_results:
         line = result.get("line", "")
-
         for data in result.get("malicious_ips", []):
             ip = data.get("ip_address", "")
-            in_data = ip in data.values()
-            print(ip, formatted_data, in_data)
+
             if not formatted_data:
-                print("Not in data")
                 new_format = {
                     "ip": ip,
                     "data": {
@@ -265,12 +269,11 @@ def parse_log(file):
             else:
                 for new_data in formatted_data:
                     if ip in new_data.values():
-                        new_data["lines"] = new_data["lines"].append(line)
+                        new_data["lines"].append(line)
                         new_data["seen"] += 1
 
 
-    print(formatted_data)
-    return malicious_results
+    return formatted_data
 
 
 

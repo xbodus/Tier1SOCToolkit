@@ -5,8 +5,8 @@ from datetime import date
 
 
 class DailyRequests(models.Model):
-    date = models.DateField(default=date.today)
-    count = models.IntegerField()
+    date = models.DateField(default=date.today, unique=True)
+    count = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = "Daily Request"
