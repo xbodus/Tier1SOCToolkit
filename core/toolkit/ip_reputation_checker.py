@@ -45,7 +45,7 @@ def ip_check(ip: str, enrich = False) -> dict:
     data = request.json()
 
     ip_data = {
-            "malicious": True if data.get("data", {}).get("abuseConfidenceScore", 0) >= 40 else False,
+            "malicious": True if data.get("data", {}).get("abuseConfidenceScore", 0) >= 30 else False,
             "data": data
         }
 

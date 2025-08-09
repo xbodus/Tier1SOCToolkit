@@ -33,7 +33,7 @@ class ReportedMalicious(models.Model):
 class Requests(models.Model):
     ip_address = models.GenericIPAddressField(verbose_name="IP Address")
     label = models.CharField(max_length=3, help_text="Signifies as source or destination ip", verbose_name="SRC/DST IP Address")
-    ports = models.CharField(max_length=30, help_text="SPT/DPT")
+    ports = models.CharField(max_length=30, null=True, blank=True, help_text="SPT/DPT")
     timestamp = models.CharField(max_length=30, help_text="Log timestamp")
     reported_malicious = models.ForeignKey(ReportedMalicious, on_delete=models.SET_NULL, null=True, blank=True, related_name="requests")
 

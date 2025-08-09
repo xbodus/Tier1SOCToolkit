@@ -93,7 +93,7 @@ def log_analyzer(request):
 
             context = {
                 "results" : data,
-                "total": len(data),
+                "total": len(data) if data else None,
                 "elapsed": elapsed,
             }
 

@@ -17,8 +17,13 @@
         <div>
             <h2>Analysis Complete: {{ total }} Potential Malicious Alerts Found</h2>
             {% for result in results %}
-                <p>Alert {{ forloop.counter }}: {{ result.malicious_ip.ip }} found at {{ result.timestamp }} reported malicious.</p>
+                <p>{{ result.line }}</p>
+                {% for ip in result.malicious_ips %}
+                    <p>{{ ip.ip_address }} reported malicious by AbuseIPDB</p>
+                    <p>Abuse Score: {{ ip.abuse_confidence_score }}</p>
+                {% endfor %}
             {% endfor %}
         </div>
+        <p>{{ results }}</p>
     {% endif %}
 {% endblock %}

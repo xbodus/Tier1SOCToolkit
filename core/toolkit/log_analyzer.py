@@ -2,6 +2,8 @@ import re
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import date
 
+from django.forms import model_to_dict
+
 from .ip_reputation_checker import ip_check
 from core.models import DailyRequests, ReportedMalicious, Requests
 from django.db import DatabaseError
@@ -119,17 +121,22 @@ def update_daily_requests():
 
 
 # Store AbuseIPDB request in database
-def store_request(parsed_data, is_malicious):
-    ports_str = ""
-    for port in parsed_data.get("ports", []):
-        ports_str += f'{port.get("label", "")}: {port.get("port", "")} '
+def store_request(parsed_data, malicious_obj=None):
+    try:
+        ports_str = " ".join(
+            f"{port.get('label', '')}: {port.get('port', '')}"
+            for port in parsed_data.get("ports", [])
+        ).strip()
+    except TypeError:
+        ports_str = None
+
     try:
         Requests.objects.create(
             ip_address=parsed_data.get("ip", "IP Error"),
             label=parsed_data.get("label", "Label Error"),
-            ports=ports_str.strip(),
+            ports=ports_str,
             timestamp=parsed_data.get("timestamp", "Timestamp Error"),
-            reported_malicious=True if is_malicious else False
+            reported_malicious=malicious_obj
         )
     except DatabaseError as e:
         print(f"Database Error: {e}")
@@ -168,24 +175,35 @@ def filter_malicious(line):
 
     malicious_ips = []
     for ip in parsed_data.get("ips", []):
+        label, ip = ip["label"], ip["ip"]
         in_database = reported_malicious(ip)
-        check = False
 
-        if in_database:
-            malicious_ips.append(ip)
-        else:
+        if not in_database:
             daily_count = check_daily_count()
             if daily_count >= 1000:
                 return f"AbuseIPDB request limit reached for the day {date.today()} resets at 12AM EST"
 
-            check = ip_check(ip.get("ip", ""))
-            is_malicious = check.get("malicious", False)
+            check_malicious = ip_check(ip)
+            is_malicious = check_malicious.get("malicious", False)
             update_daily_requests()
             if is_malicious:
-                malicious_ips.append(ip)
-                store_malicious(check.get("data", {}))
+                store_malicious(check_malicious.get("data", {}))
 
-        store_request(ip, check.get("malicious", False))
+        try:
+            malicious_obj = ReportedMalicious.objects.get(ip_address=ip)
+            # If in db append, db data
+            malicious_ips.append(model_to_dict(malicious_obj))
+        except ReportedMalicious.DoesNotExist:
+            malicious_obj = None
+
+        store = {
+            "ip": ip,
+            "label": ip,
+            "timestamp": parsed_data.get("timestamp", "Timestamp Error"),
+            "ports": parsed_data.get("ports", []),
+        }
+
+        store_request(store, malicious_obj)
 
     if malicious_ips:
         return {
@@ -193,7 +211,7 @@ def filter_malicious(line):
             "malicious_ips": malicious_ips
         }
 
-    return None
+    return {}
 
 
 
@@ -221,20 +239,38 @@ def parse_log(file):
     log_lines = read_file(file)
 
     malicious_results = threaded_ip_check(log_lines)
-    print(malicious_results)
 
-    # parsed_data = []
-    # for malicious_line in malicious_results:
-    #
-    #     parsed_data.append({
-    #         "malicious_ip": malicious_line.get("malicious_ip", ""),
-    #         "timestamp": timestamp if timestamp else "Timestamp unavailable",
-    #         "ips": ips if ips else "IPs unavailable",
-    #         "protocol": protocol if protocol else "Protocols unavailable",
-    #         "ports": ports if ports else "Ports unavailable"
-    #     })
-    #
-    # return parsed_data
+    formatted_data = []
+    for result in malicious_results:
+        line = result.get("line", "")
+
+        for data in result.get("malicious_ips", []):
+            ip = data.get("ip_address", "")
+            in_data = ip in data.values()
+            print(ip, formatted_data, in_data)
+            if not formatted_data:
+                print("Not in data")
+                new_format = {
+                    "ip": ip,
+                    "data": {
+                        "abuse_confidence_score": data.get("abuse_confidence_score", "ACS Error"),
+                        "country_code": data.get("country_code", "CC Error"),
+                        "isp": data.get("isp", "ISP Error"),
+                        "last_reported_at": data.get("last_reported_at", "Last Reported Error")
+                    },
+                    "lines": [line],
+                    "seen": 1
+                }
+                formatted_data.append(new_format)
+            else:
+                for new_data in formatted_data:
+                    if ip in new_data.values():
+                        new_data["lines"] = new_data["lines"].append(line)
+                        new_data["seen"] += 1
+
+
+    print(formatted_data)
+    return malicious_results
 
 
 
