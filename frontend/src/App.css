@@ -1,0 +1,228 @@
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100dvh;
+    width: 100%;
+}
+
+#dashboard {
+    background-color: #1a1a1a;
+}
+
+#react-dashboard {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#applications {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    height: 100%;
+}
+
+.application-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 15%;
+    width: 5rem;
+    padding: 1rem;
+}
+
+.application-container:hover {
+    background-color: rgba(202, 202, 202, 0.2);
+}
+
+.application-container > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    background-color: #888888;
+    border-radius: 5px;
+    width: 100%;
+    aspect-ratio: 1/1;
+}
+
+.application-container > div > div {
+    background-color: #f9f9f9;
+    border-radius: 2px;
+    height: 20%;
+    width: 20%;
+}
+
+.application-container > p {
+    text-align: center;
+    color: #888888;
+    margin: 0;
+}
+
+/* Toolbar */
+
+#toolbar {
+    display: flex;
+    justify-content: space-between;
+    background-color: #888888;
+    width: 100%;
+    height: 5%;
+}
+
+/* Toolbar > Start Button */
+
+#start-btn {
+    height: 100%;
+    aspect-ratio: 1/1;
+    padding: .25rem;
+}
+
+#start-btn:hover {
+    background-color: rgba(202, 202, 202, 0.5);
+}
+
+#start-btn > div {
+    height: 100%;
+    aspect-ratio: 1/1;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+/* Toolbar > Search Bar */
+#searchbar {
+    height: 100%;
+    aspect-ratio: 5/1;
+    padding: .5rem;
+}
+
+#searchbar > div {
+    height: 100%;
+    width: 100%;
+    background-color: rgba(204, 204, 204, 0.4);
+    border-radius: 20px;
+}
+
+#searchbar > div:hover {
+    background-color: rgba(204, 204, 204, 0.6);
+}
+
+/* Toolbar > Application Icons */
+
+#browser-icon, #files-icon {
+    height: 100%;
+    aspect-ratio: 1/1;
+    padding: .5rem;
+}
+
+#browser-icon > div, #files-icon > div {
+    height: 100%;
+    aspect-ratio: 1/1;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+#browser-icon:hover, #files-icon:hover {
+    background-color: rgba(204, 204, 204, 0.6);
+}
+
+/* Toolbar > Indicators */
+#accessibility-controls:hover {
+    background-color: rgba(204, 204, 204, 0.6);
+}
+
+#wifi-indicator, #battery-indicator {
+    height: 100%;
+    aspect-ratio: 1/1;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+/* Toolbar > Data and Time */
+#date-and-time {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    justify-content: center;
+}
+
+#date-and-time > p {
+    color: rgba(204, 204, 204, 0.9);
+    margin: 0;
+}
+
+#chatbot-indicator {
+    height: 100%;
+    aspect-ratio: 1/1;
+    padding: .5rem;
+}
+
+#chatbot-indicator:hover {
+    background-color: rgba(202, 202, 202, 0.5);
+}
+
+#chatbot-indicator > div {
+    border: 3px solid #f9f9f9;
+    border-radius: 20px;
+    height: 100%;
+    aspect-ratio: 1/1;
+}
+
+/* Utility Classes */
+.fullscreen {
+    height: 100%;
+    width: 100%;
+}
+
+.h-full {
+    height: 100%;
+}
+
+.flex {
+    display: flex;
+}
+
+.gap-10 {
+    gap: 10px;
+}
+
+.p-1 {
+    padding: .25rem;
+}
+
+.p-2 {
+    padding: .5rem;
+}
+
+.p-3 {
+    padding: .75rem
+}
+
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+h1 {
+    color: #007bff;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+.center {
+    text-align: center;
+}

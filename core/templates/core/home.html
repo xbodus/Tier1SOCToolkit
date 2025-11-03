@@ -1,15 +1,10 @@
 {% extends "core/base.html" %}
+{% load django_vite %}
 
 {% block content %}
-    <div class="container">
-        <h1>Welcome to the SOC Analyst Toolkit</h1>
-        <p>Select a tool to get started</p>
+    <div id="dashboard" class="fullscreen"></div>
+{% endblock %}
 
-        <ul>
-            <li><a href="{% url 'port_scanner' %}">Port Scanner</a></li>
-            <li><a href="{% url 'ip_reputation' %}">IP Reputation Checker</a></li>
-            <li><a href="{% url 'log_analyzer' %}">Log Analyzer</a></li>
-            <li><a href="#">Live Monitor</a></li>
-        </ul>
-    </div>
+{% block vite_asset %}
+    {% vite_asset "src/Dashboard/main.tsx" %}
 {% endblock %}

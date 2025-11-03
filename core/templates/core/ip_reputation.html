@@ -22,9 +22,9 @@
             <h2>Reputation Results</h2>
             <h3>
                 {% if results.malicious %}
-                    Potential Malicious IP: {{ ip }}({{ results.confidence_score }}) - Reported {{ results.total_reports }} times
+                    Potential Malicious IP: {{ ip }}({{ results.data.data.abuseConfidenceScore }}) - Reported {{ results.data.data.totalReports }} times
                 {% else %}
-                    IP Reports Non-Malicious: {{ ip }}({{ results.confidence_score }}) - Reported {{ results.total_reports }} times
+                    IP Non-Malicious: {{ ip }}({{ results.data.data.abuseConfidenceScore }})
                 {% endif %}
             </h3>
             {% if results.enriched_data %}
