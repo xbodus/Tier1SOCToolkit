@@ -62,6 +62,14 @@ body, html {
     margin: 0;
 }
 
+.app-window {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
 /* Toolbar */
 
 #toolbar {
