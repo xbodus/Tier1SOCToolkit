@@ -1,24 +1,27 @@
-import AppWindow from "../Utils/Window.tsx";
-import { useState } from "react";
+import {useWindowContext} from "../ContextWrappers/WindowContext.tsx";
+
+
 
 type Props = {
     label: string
 }
 
 export default function Application(props: Props) {
-    const [mount, setMount] = useState(false)
+    const { openWindow } = useWindowContext()
+
+    const handleContext = () => {
+        openWindow(props.label)
+        return
+    }
 
     return (
-        <div className='application-container' onClick={() => setMount(true)}>
-            <div>
-                <div></div>
+        <>
+            <div className='application-container' onClick={() => handleContext()}>
+                <div>
+                    <div className="application"></div>
+                </div>
+                <p>{props.label}</p>
             </div>
-            <p>{props.label}</p>
-            {mount && (
-                <AppWindow>
-                    <p>New window</p>
-                </AppWindow>
-            )}
-        </div>
+        </>
     )
 }
