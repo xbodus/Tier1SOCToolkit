@@ -1,4 +1,7 @@
+import json
+
 from django.shortcuts import render
+from django.http import JsonResponse
 from datetime import datetime
 import ipaddress
 from .toolkit.port_scanner import threaded_port_scan
@@ -16,9 +19,13 @@ def port_scanner(request):
     error = None
     if request.method == "POST":
         try:
-            target = request.POST.get("target", "")
-            port_str = request.POST.get("port_range", "")
-            start, end = (1, 1024)
+            body = json.loads(request.body)
+
+            target = body.get("target")
+            port_range = body.get("range")
+
+            start = int(port_range.get("start", 1))
+            end = int(port_range.get("end", 1024))
 
             try:
                 is_valid_target(target)
@@ -26,22 +33,12 @@ def port_scanner(request):
                 error = e
                 raise ValueError
 
-            if port_str:
-                try:
-                    start_str, end_str = port_str.split("-", 1)
-                    start = int(start_str)
-                    end = int(end_str)
-                except ValueError:
-                    error = "Entered ports invalid."
-                    raise ValueError
-
-                print(start, end)
-                if not 1<= start <= 65535 or not 1 <= end <= 65535:
-                    error = "Invalid entry. Ports must be between 1 and 65535."
-                    raise ValueError
-                elif not start <= end:
-                    error = "Invalid entry. Start port must be less than end port."
-                    raise ValueError
+            if not 1<= start <= 65535 or not 1 <= end <= 65535:
+                error = "Invalid entry. Ports must be between 1 and 65535."
+                raise ValueError
+            elif not start <= end:
+                error = "Invalid entry. Start port must be less than end port."
+                raise ValueError
 
             start_time = datetime.now()
             open_ports = threaded_port_scan(target, start, end)
@@ -55,48 +52,56 @@ def port_scanner(request):
                 "error": error
             }
 
-        return render(request, "core/port_scanner.html", context)
+        return JsonResponse({"data": context})
 
-    return render(request, "core/port_scanner.html")
+    return JsonResponse({"error": error})
 
 
 
 def ip_reputation(request):
     if request.method == "POST":
-        ip = request.POST.get("ip", "")
-        enrich = "enrich" in request.POST
+        body = json.loads(request.body)
+        ip = body.get("ip")
+        enrich = body.get("enrichData")
 
         try:
             is_valid_target(ip)
         except (ipaddress.AddressValueError, OSError) as e:
-            return render(request, "core/ip_reputation.html", {"error": str(e)})
+            return JsonResponse({"error": str(e)})
 
-        results = ip_check(ip, enrich)
+        try:
+            results = ip_check(ip, enrich)
+        except Exception as e:
+            return JsonResponse({"error": str(e)})
+
         context = {
             "ip": ip,
             "results": results
         }
 
-        return render(request, "core/ip_reputation.html", context)
-
-    return render(request, "core/ip_reputation.html")
+        return JsonResponse(context)
+    return None
 
 
 
 def log_analyzer(request):
     if request.method == "POST":
-        if "file" in request.FILES:
-            file = request.FILES['file']
-            start_time = datetime.now()
-            data = parse_log(file)
-            elapsed = start_time - datetime.now()
+        try:
+            if "file" in request.FILES:
+                file = request.FILES['file']
+                print(file)
+                start_time = datetime.now()
+                data = parse_log(file)
+                elapsed = start_time - datetime.now()
 
-            context = {
-                "results" : data,
-                "total": len(data) if data else None,
-                "elapsed": elapsed,
-            }
+                context = {
+                    "results" : data,
+                    "total": len(data) if data else None,
+                    "elapsed": elapsed,
+                }
 
-            return render(request, "core/log_analyzer.html", context)
+                return JsonResponse(context)
+        except Exception as e:
+            return JsonResponse({"error": str(e)})
 
-    return render(request, "core/log_analyzer.html")
+    return None

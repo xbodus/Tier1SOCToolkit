@@ -2,6 +2,11 @@ import { Rnd } from "react-rnd";
 import {useWindowContext} from "../ContextWrappers/WindowContext.tsx";
 import {useEffect, useState} from "react";
 import Browser from "../components/Browser.tsx";
+import PortScanner from "../components/PortScanner.tsx";
+import LogAnalyzer from "../components/LogAnalyzer.tsx";
+import IPAnalyzer from "../components/IpAnalyzer.tsx";
+import SIEM from "../components/SIEM.tsx";
+import AppWrapper from "./ApplicationWrapper.tsx";
 
 type Props = {
     children: any;
@@ -43,7 +48,7 @@ export default function AppWindow(props:Props) {
     return (
         <Rnd
             size={{
-                height: fullscreen ? window.innerHeight : dimensions.height,
+                height: fullscreen ? window.innerHeight - 40 : dimensions.height,
                 width: fullscreen ? window.innerWidth : dimensions.width
             }}
             position={{
@@ -59,8 +64,8 @@ export default function AppWindow(props:Props) {
             minHeight={200}
             className="app-window"
             dragHandleClassName="window-controls"
-            onDragStop={(e, data) => setPosition({x: data.x, y: data.y})}
-            onResizeStop={(e, direction, ref, delta, pos) => {
+            onDragStop={(_e, data) => setPosition({x: data.x, y: data.y})}
+            onResizeStop={(_e, _direction, ref, _delta, pos) => {
                 setDimensions({height: ref.offsetHeight, width: ref.offsetWidth})
                 setPosition({x: pos.x, y: pos.y})
             }}
@@ -80,10 +85,22 @@ export default function AppWindow(props:Props) {
                 </div>
                 <div className="window-content">
                     {props.context.app === "Browser" && <Browser url={"http://192.168.56.101"} />}
-                    {props.context.app === "Port Scanner" && <p>Placeholder content</p>}
-                    {props.context.app === "Log Analyzer" && <p>Placeholder content</p>}
-                    {props.context.app === "IP Analyzer" && <p>Placeholder content</p>}
-                    {props.context.app === "SIEM" && <p>Placeholder content</p>}
+                    {props.context.app === "Port Scanner" &&
+                        <AppWrapper>
+                            <PortScanner />
+                        </AppWrapper>}
+                    {props.context.app === "IP Analyzer" &&
+                        <AppWrapper>
+                            <IPAnalyzer />
+                        </AppWrapper>}
+                    {props.context.app === "Log Analyzer" &&
+                        <AppWrapper>
+                            <LogAnalyzer />
+                        </AppWrapper>}
+                    {props.context.app === "SIEM" &&
+                        <AppWrapper>
+                            <SIEM />
+                        </AppWrapper>}
                 </div>
             </div>
         </Rnd>

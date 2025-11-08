@@ -12,8 +12,8 @@ export default function Dashboard() {
         <section id='react-dashboard' className='fullscreen'>
             <div id='applications'>
                 <Application label='Port Scanner' />
-                <Application label='Log Analyzer' />
                 <Application label='IP Analyzer' />
+                <Application label='Log Analyzer' />
                 <Application label='SIEM' />
             </div>
             {windows && windows.map(w =>
