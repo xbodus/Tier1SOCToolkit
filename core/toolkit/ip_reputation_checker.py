@@ -1,6 +1,6 @@
 import requests
 
-from SOCTeir1Toolkit_CapstoneProject.settings import env
+from myproject.settings import env
 
 """
     1. Check against AbuseIPDB

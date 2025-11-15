@@ -7,6 +7,7 @@ import LogAnalyzer from "../components/LogAnalyzer.tsx";
 import IPAnalyzer from "../components/IpAnalyzer.tsx";
 import SIEM from "../components/SIEM.tsx";
 import AppWrapper from "./ApplicationWrapper.tsx";
+import LiveMessager from "../components/LiveMessager.tsx";
 
 type Props = {
     children: any;
@@ -101,6 +102,11 @@ export default function AppWindow(props:Props) {
                         <AppWrapper>
                             <SIEM />
                         </AppWrapper>}
+                    {props.context.app === "Live Messenger" &&
+                        <AppWrapper>
+                            <LiveMessager />
+                        </AppWrapper>
+                    }
                 </div>
             </div>
         </Rnd>

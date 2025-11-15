@@ -11,6 +11,10 @@ from .toolkit.log_analyzer import parse_log
 # Create your views here.
 
 
+def test(request):
+    return render(request, 'core/channels-redis-test.html')
+
+
 def home(request):
     return render(request, 'core/home.html')
 

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+<input id="msg" type="text" placeholder="Type a message">
+<button onclick="sendMessage(document.getElementById('msg').value)">Send</button>
+
+<script>
+const ws = new WebSocket("ws://127.0.0.1:8000/ws/test/");
+
+ws.onopen = () => console.log("Connected!");
+ws.onmessage = (event) => console.log("Received:", event.data);
+
+function sendMessage(msg) {
+    ws.send(msg);
+}
+</script>
+</body>
+</html>

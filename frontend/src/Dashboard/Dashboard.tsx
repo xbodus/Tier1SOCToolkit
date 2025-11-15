@@ -15,6 +15,7 @@ export default function Dashboard() {
                 <Application label='IP Analyzer' />
                 <Application label='Log Analyzer' />
                 <Application label='SIEM' />
+                <Application label='Live Messenger' />
             </div>
             {windows && windows.map(w =>
                 <AppWindow key={w.id} context={w}>
