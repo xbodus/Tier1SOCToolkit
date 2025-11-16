@@ -1,13 +1,21 @@
 import json
 
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 from datetime import datetime
 import ipaddress
+
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
+
 from .toolkit.port_scanner import threaded_port_scan
 from .toolkit.ip_reputation_checker import ip_check
 from .toolkit.utils import is_valid_target
 from .toolkit.log_analyzer import parse_log
+from .toolkit.Workers.tasks import send_user_log
 # Create your views here.
 
 
@@ -109,3 +117,47 @@ def log_analyzer(request):
             return JsonResponse({"error": str(e)})
 
     return None
+
+
+@csrf_exempt
+def log_ingestion(request):
+    if request.method != "POST":
+        return HttpResponseBadRequest("POST request required")
+
+    try:
+        data = json.loads(request.body.decode("UTF-8"))
+    except Exception as e:
+        return HttpResponseBadRequest(f"Invalid JSON: {e}")
+
+    if not data:
+        return HttpResponseBadRequest("No data provided")
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "logs",
+        {
+            "type": "log.message",
+            "content": data
+        }
+    )
+    return JsonResponse({"status": "ok"})
+
+
+@require_GET
+def request_logs(request):
+    # Generate a session key for the user if not already present
+    print("Starting request")
+    if not request.session.session_key:
+        request.session.create()
+    session_key = request.session.session_key
+
+    # Call send_user_log form task.py. Pass message and session key
+    async_to_sync(send_user_log)("Starting log stream...", session_key)
+
+    # Return the WebSocket info
+    ws_url = f"ws://127.0.0.1:8000/ws/logs/{session_key}/"
+
+    return JsonResponse({
+        "ws_url": ws_url,
+        "session_key": session_key
+    })

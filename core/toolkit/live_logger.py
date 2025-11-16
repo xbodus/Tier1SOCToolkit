@@ -13,3 +13,4 @@ health = es.cluster.health()
 # Search logs
 resp = es.search(index="filebeat-*", query={"match_all": {}}, size=5)
 print(resp["hits"]["hits"])
+

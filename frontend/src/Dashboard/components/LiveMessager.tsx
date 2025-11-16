@@ -26,7 +26,7 @@ export default function LiveMessenger() {
         if (socket.current) {
             socket.current.send(message)
         }
-
+        setMessage("")
     }
 
     const ChatLog = () => {

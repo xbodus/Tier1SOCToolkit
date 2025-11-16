@@ -156,3 +156,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SESSION_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SECURE = True
+
+
+#Elasticsearch
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'https://elasticsearch:9200',
+        'http_auth': ('elastic', 'Gan5Q2++ncK-6FCTRjsx'),
+        'verify_certs': True,
+        'ca_certs': f"{BASE_DIR}/elk/certs/elastic-stack-ca.pem"
+    },
+}
