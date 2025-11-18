@@ -15,7 +15,9 @@ from .toolkit.port_scanner import threaded_port_scan
 from .toolkit.ip_reputation_checker import ip_check
 from .toolkit.utils import is_valid_target
 from .toolkit.log_analyzer import parse_log
-from .toolkit.Workers.tasks import send_user_log
+from .toolkit.Workers.tasks import start_es_worker
+
+
 # Create your views here.
 
 
@@ -152,7 +154,7 @@ def request_logs(request):
     session_key = request.session.session_key
 
     # Call send_user_log form task.py. Pass message and session key
-    async_to_sync(send_user_log)("Starting log stream...", session_key)
+    start_es_worker("Starting log stream...", session_key)
 
     # Return the WebSocket info
     ws_url = f"ws://127.0.0.1:8000/ws/logs/{session_key}/"

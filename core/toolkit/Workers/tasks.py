@@ -1,5 +1,10 @@
-import asyncio
+import time
+import threading
+from datetime import datetime, timezone
+
 from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.core.cache import cache
 from elasticsearch import Elasticsearch
 
 # Path to your PEM file
@@ -14,47 +19,56 @@ es = Elasticsearch(
 )
 
 channel_layer = get_channel_layer()
+print(channel_layer)
+
+def start_es_worker(message, session_key):
+    thread = threading.Thread(
+        target=send_user_log,
+        args=(message, session_key),
+        daemon=True
+    )
+    thread.start()
+    return thread
 
 
-async def send_user_log(message, session_key):
-    print("Starting task")
-    print("Session Key:", session_key)
-
+def send_user_log(message, session_key):
+    stop_key = f"stop_logs_{session_key}"
     index = "filebeat-*"
-    last_timestamp = None
+    last_timestamp = datetime.now(timezone.utc).isoformat()
 
-    i = 20
-    while i > 0:
+    while True:
+        if cache.get(stop_key):
+            print(f"[Worker] Stopping worker for {session_key}")
+            break
+
         # Elasticsearch query
         query = {
-            "size": 100,
+            "size": 30,
             "sort": [{"@timestamp": {"order": "asc"}}],
             "query": {
-                "match_all": {}} if last_timestamp is None else {
-                    "range": {"@timestamp": {"gt": last_timestamp}
+                    "range": {
+                        "@timestamp": {"gt": last_timestamp}
                 }
             }
         }
 
         try:
             results = es.search(index=index, body=query)
+            print(results)
         except Exception as e:
             print("ES error:", e)
-            i = i-1
-            await asyncio.sleep(1)
+            time.sleep(2)
             continue
 
         hits = results.get("hits", {}).get("hits", [])
 
-
         for hit in hits:
-            print(hit)
             source = hit["_source"]
             ts = source["@timestamp"]
             last_timestamp = ts  # update the pointer
 
             # send to websocket group
-            await channel_layer.group_send(
+            async_to_sync(channel_layer.group_send)(
                 f"user_logs_{session_key}",
                 {
                     "type": "send_log",
@@ -62,6 +76,7 @@ async def send_user_log(message, session_key):
                 }
             )
 
-        i = i-1
-        await asyncio.sleep(1)
+            time.sleep(1)
+
+        time.sleep(2)
 

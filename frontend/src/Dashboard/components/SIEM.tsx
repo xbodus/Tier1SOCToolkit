@@ -12,7 +12,6 @@ export default function SIEM() {
                 const response = await fetch("/api/start-logs")
                 const data = await response.json()
                 setSessionKey(data.session_key)
-                console.log(data.session_key)
             } catch (err) {
                 console.error("Failed to get session key:", err)
             }
