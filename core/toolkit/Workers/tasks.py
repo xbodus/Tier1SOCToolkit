@@ -32,6 +32,7 @@ def start_es_worker(message, session_key):
 
 
 def send_user_log(message, session_key):
+    print("Task started")
     stop_key = f"stop_logs_{session_key}"
     index = "filebeat-*"
     last_timestamp = datetime.now(timezone.utc).isoformat()
@@ -54,14 +55,13 @@ def send_user_log(message, session_key):
 
         try:
             results = es.search(index=index, body=query)
-            print(results)
         except Exception as e:
             print("ES error:", e)
             time.sleep(2)
             continue
 
         hits = results.get("hits", {}).get("hits", [])
-
+        print(hits)
         for hit in hits:
             source = hit["_source"]
             ts = source["@timestamp"]

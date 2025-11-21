@@ -104,6 +104,11 @@ body, html {
     overflow-y: auto;
 }
 
+/* SIEM */
+.log-window {
+    height: 500px;
+}
+
 /* Taskbar */
 
 #taskbar {
@@ -238,6 +243,10 @@ body, html {
     height: 100%;
 }
 
+.h-50 {
+    height: 50%;
+}
+
 .flex {
     display: flex;
 }
@@ -288,4 +297,8 @@ a:hover {
 .popup {
     position: absolute;
     background-color: #888888;
+}
+
+.overflow-y {
+    overflow-y: auto;
 }

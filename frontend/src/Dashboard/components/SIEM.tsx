@@ -5,6 +5,7 @@ export default function SIEM() {
     const [sessionKey, setSessionKey] = useState<string | null>(null)
     const socket = useRef<WebSocket | null>(null)
     const [logs, setLogs] = useState<any[]>([])
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -47,10 +48,33 @@ export default function SIEM() {
         return () => socket.current?.close()
     }, [sessionKey])
 
+    useEffect(() => {
+        if (logs.length === 0) {
+            setIsLoading(true)
+        } else {
+            setIsLoading(false)
+        }
+    }, [logs])
+
+    const Logs = () => {
+        return (
+            <div>
+                {logs.map((log, index) => (
+                    <div key={index}>
+                        <p>{JSON.stringify(log.event)}</p>
+                    </div>
+                ))}
+            </div>
+        )
+    }
 
     return (
         <div>
             <h2>SIEM</h2>
+            <div className="log-window overflow-y">
+                {isLoading && (<p>Waiting for logs...</p>)}
+                {!isLoading && logs && (<Logs />)}
+            </div>
         </div>
     )
 }
