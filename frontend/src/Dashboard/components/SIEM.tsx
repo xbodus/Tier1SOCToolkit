@@ -70,7 +70,7 @@ export default function SIEM() {
 
     return (
         <div>
-            <h2>SIEM</h2>
+            <h2>SIEM Old Version</h2>
             <div className="log-window overflow-y">
                 {isLoading && (<p>Waiting for logs...</p>)}
                 {!isLoading && logs && (<Logs />)}
