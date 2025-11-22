@@ -1,13 +1,13 @@
 import { Rnd } from "react-rnd";
-import {useWindowContext} from "../ContextWrappers/WindowContext.tsx";
+import {useWindowContext} from "../../ContextWrappers/Depreciated ContextWrappers/WindowContext.tsx";
 import {useEffect, useState} from "react";
-import Browser from "../components/Browser.tsx";
-import PortScanner from "../components/PortScanner.tsx";
-import LogAnalyzer from "../components/LogAnalyzer.tsx";
-import IPAnalyzer from "../components/IpAnalyzer.tsx";
-import SIEM from "../components/SIEM.tsx";
+import Browser from "./Browser.tsx";
+import PortScanner from "./PortScanner.tsx";
+import LogAnalyzer from "./LogAnalyzer.tsx";
+import IPAnalyzer from "./IpAnalyzer.tsx";
+import SIEM from "../SIEM.tsx";
 import AppWrapper from "./ApplicationWrapper.tsx";
-import LiveMessager from "../components/LiveMessager.tsx";
+import LiveMessager from "./LiveMessager.tsx";
 
 type Props = {
     children: any;

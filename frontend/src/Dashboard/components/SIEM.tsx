@@ -1,17 +1,26 @@
 import {useState, useEffect, useRef} from "react";
+import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
 
 
 export default function SIEM() {
+    const {logs, addLog} = useLogsContext()
     const [sessionKey, setSessionKey] = useState<string | null>(null)
     const socket = useRef<WebSocket | null>(null)
-    const [logs, setLogs] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [cooldown, setCooldown] = useState(0)
 
     useEffect(() => {
+        if (cooldown > 0) return
+
         const fetchSession = async () => {
             try {
                 const response = await fetch("/api/start-logs")
                 const data = await response.json()
+
+                if (data.cooldown) {
+                    setCooldown(data.cooldown_remaining)
+                    return
+                }
                 setSessionKey(data.session_key)
             } catch (err) {
                 console.error("Failed to get session key:", err)
@@ -19,7 +28,7 @@ export default function SIEM() {
         }
 
         fetchSession()
-    }, [])
+    }, [cooldown])
 
 
     useEffect(() => {
@@ -34,7 +43,7 @@ export default function SIEM() {
         socket.current.onmessage = (event) => {
             const data = JSON.parse(event.data)
             console.log(data)
-            setLogs((prevLogs) => [...prevLogs, data])
+            addLog(data)
         }
 
         socket.current.onclose = () => {
@@ -56,12 +65,36 @@ export default function SIEM() {
         }
     }, [logs])
 
-    const Logs = () => {
+    useEffect(() => {
+        console.log(cooldown)
+        if (cooldown <= 0) return
+
+        const interval = setInterval(() => {
+            setCooldown(prev => Math.max(prev - 1, 0));
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [cooldown])
+
+
+    const CooldownTimer = () => {
         return (
             <div>
-                {logs.map((log, index) => (
+                <p className="white">System cooling down…</p>
+                <p className="white">Please wait {cooldown} seconds.</p>
+            </div>
+        )
+    }
+
+
+    const Logs = () => {
+        const reversedLogs = [...logs].reverse()
+
+        return (
+            <div>
+                {reversedLogs.map((log, index) => (
                     <div key={index}>
-                        <p>{JSON.stringify(log.event)}</p>
+                        <p className="white">{JSON.stringify(log.event)}</p>
                     </div>
                 ))}
             </div>
@@ -70,11 +103,10 @@ export default function SIEM() {
 
     return (
         <div>
-            <h2>SIEM</h2>
-            <h3>Old Version</h3>
             <div className="log-window overflow-y">
-                {isLoading && (<p>Waiting for logs...</p>)}
-                {!isLoading && logs && (<Logs />)}
+                {cooldown > 0 && (<CooldownTimer />)}
+                {isLoading && cooldown <= 0 && (<p className="white">Waiting for logs...</p>)}
+                {!isLoading && cooldown <=0 && logs && (<Logs />)}
             </div>
         </div>
     )

@@ -19,7 +19,6 @@ es = Elasticsearch(
 )
 
 channel_layer = get_channel_layer()
-print(channel_layer)
 
 def start_es_worker(message, session_key):
     thread = threading.Thread(
@@ -36,6 +35,7 @@ def send_user_log(message, session_key):
     stop_key = f"stop_logs_{session_key}"
     index = "filebeat-*"
     last_timestamp = datetime.now(timezone.utc).isoformat()
+
 
     while True:
         if cache.get(stop_key):

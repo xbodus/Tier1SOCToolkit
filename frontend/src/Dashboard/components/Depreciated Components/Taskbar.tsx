@@ -7,7 +7,7 @@ import FilesManager from "./FilesManager.tsx";
 import AccessibilityControls from "./AccessibilityControls.tsx";
 import AI from "./AI.tsx";
 
-import {useWindowContext} from "../ContextWrappers/WindowContext.tsx";
+import {useWindowContext} from "../../ContextWrappers/Depreciated ContextWrappers/WindowContext.tsx";
 
 
 export default function Taskbar(){

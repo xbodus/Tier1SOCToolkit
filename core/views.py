@@ -1,5 +1,7 @@
 import json
+import time
 
+from django.core.cache import cache
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest
 from channels.layers import get_channel_layer
@@ -18,15 +20,17 @@ from .toolkit.log_analyzer import parse_log
 from .toolkit.Workers.tasks import start_es_worker
 
 
-# Create your views here.
-
-
-def test(request):
-    return render(request, 'core/channels-redis-test.html')
 
 
 def home(request):
     return render(request, 'core/home.html')
+
+
+def lab(request):
+    return render(request, 'core/soc_lab.html')
+
+def blog(request):
+    return render(request, 'core/blog.html')
 
 
 def port_scanner(request):
@@ -152,6 +156,21 @@ def request_logs(request):
     if not request.session.session_key:
         request.session.create()
     session_key = request.session.session_key
+
+    stop_key = f"stop_logs_{session_key}"
+    cooldown_ends = cache.get(stop_key)
+
+
+    # If cooldown exists and not expired
+    if cooldown_ends:
+        remaining = int(cooldown_ends - time.time())
+        if remaining > 0:
+            return JsonResponse({
+                "cooldown": True,
+                "cooldown_remaining": remaining,
+                "session_key": session_key,
+                "ws_url": None
+            })
 
     # Call send_user_log form task.py. Pass message and session key
     start_es_worker("Starting log stream...", session_key)
