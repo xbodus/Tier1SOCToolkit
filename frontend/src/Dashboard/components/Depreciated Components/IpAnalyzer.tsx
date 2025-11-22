@@ -1,4 +1,4 @@
-import {getCookie} from "../Utils/utils.tsx";
+import {getCookie} from "../../Utils/utils.tsx";
 import {useState, useRef} from "react";
 
 

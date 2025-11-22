@@ -1,4 +1,4 @@
-import {useWindowContext} from "../ContextWrappers/WindowContext.tsx";
+import {useWindowContext} from "../../ContextWrappers/Depreciated ContextWrappers/WindowContext.tsx";
 
 
 

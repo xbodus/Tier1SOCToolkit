@@ -9,15 +9,54 @@ body, html {
     width: 100%;
 }
 
+/* dashboard */
 #dashboard {
     background-color: #1a1a1a;
 }
 
 #react-dashboard {
     display: flex;
+}
+
+.siem-lab-label {
+    color: #118e11;
+    writing-mode: sideways-lr;
+    text-align: end;
+    padding: 2rem 0;
+}
+
+.siem-lab-content {
+    width: 100%;
+}
+
+#routing {
+    display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
+
+.siem-lab-control {
+    writing-mode: sideways-rl;
+}
+
+
+/* SIEM  */
+.siem-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.log-window {
+    height: 70vh;
+}
+
+
+
+
+
+/* Depreciated styling */
 
 #applications {
     display: flex;
@@ -238,6 +277,10 @@ body, html {
     height: 100%;
 }
 
+.h-50 {
+    height: 50%;
+}
+
 .flex {
     display: flex;
 }
@@ -288,4 +331,12 @@ a:hover {
 .popup {
     position: absolute;
     background-color: #888888;
+}
+
+.overflow-y {
+    overflow-y: auto;
+}
+
+.white{
+    color: #dcd7d7;
 }

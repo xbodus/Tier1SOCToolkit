@@ -2,12 +2,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import "../App.css"
 import Dashboard from './Dashboard.tsx'
-import {WindowProvider} from "./ContextWrappers/WindowContext.tsx";
+import {LogsProvider} from "./ContextWrappers/LogsContext.tsx"
 
 createRoot(document.getElementById('dashboard')!).render(
   <StrictMode>
-      <WindowProvider>
+      <LogsProvider>
               <Dashboard />
-      </WindowProvider>
+      </LogsProvider>
   </StrictMode>,
 )
