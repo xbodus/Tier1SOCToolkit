@@ -48,6 +48,14 @@ body, html {
     height: 100%;
 }
 
+.visuals-wrapper {
+    display: flex;
+    gap: 20px;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+}
+
 .log-window {
     height: 70vh;
 }

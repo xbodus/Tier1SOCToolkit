@@ -1,12 +1,21 @@
-
-
-
+import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
 
 
 export default function PieChart() {
+    const {ips} = useLogsContext()
+
+
+
     return (
         <div>
-            <p className="white">Pie chart to log top 5 ips making requests</p>
+            {Object.entries(ips).length === 0 && <p className="white">Waiting for data</p>}
+            {Object.entries(ips).length > 0 && (
+                <>
+                    {Object.entries(ips).map(([ip, count]) => (
+                        <p key={ip} className="white">{ip}: {count}</p>
+                    ))}
+                </>
+            )}
         </div>
     )
 }
