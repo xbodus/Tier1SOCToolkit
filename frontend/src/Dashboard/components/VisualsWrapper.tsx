@@ -5,7 +5,7 @@
 
 export default function VisualsWrapper({children}:{children:any}) {
     return (
-        <div>
+        <div className="visuals-wrapper">
             {children}
         </div>
     )

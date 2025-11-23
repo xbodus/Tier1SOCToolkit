@@ -42,7 +42,6 @@ export default function SIEM() {
 
         socket.current.onmessage = (event) => {
             const data = JSON.parse(event.data)
-            console.log(data)
             addLog(data)
         }
 
@@ -66,7 +65,6 @@ export default function SIEM() {
     }, [logs])
 
     useEffect(() => {
-        console.log(cooldown)
         if (cooldown <= 0) return
 
         const interval = setInterval(() => {
@@ -80,7 +78,7 @@ export default function SIEM() {
     const CooldownTimer = () => {
         return (
             <div>
-                <p className="white">System cooling down…</p>
+                <p className="white">System starting up…</p>
                 <p className="white">Please wait {cooldown} seconds.</p>
             </div>
         )
@@ -94,7 +92,7 @@ export default function SIEM() {
             <div>
                 {reversedLogs.map((log, index) => (
                     <div key={index}>
-                        <p className="white">{JSON.stringify(log.event)}</p>
+                        <p className="white">{JSON.stringify(log)}</p>
                     </div>
                 ))}
             </div>

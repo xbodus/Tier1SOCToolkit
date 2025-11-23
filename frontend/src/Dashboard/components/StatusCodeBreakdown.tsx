@@ -1,12 +1,25 @@
+import {type StatusInstance} from "../ContextWrappers/LogsContext.tsx";
+import {PolarAngleAxis, PolarGrid, Radar, RadarChart, Tooltip} from "recharts";
 
 
+export interface RadarDatum {
+  code: string;
+  count: number;
+}
 
-
-
-export default function StatusCodeBreakdown() {
+export default function StatusCodeBreakdown({data}:{data:StatusInstance}) {
+    const radarData: RadarDatum[] = Object.entries(data).map(
+        ([code, count]) => ({
+            code,
+            count
+        })
+    )
     return (
-        <div>
-            <p className="white">Breakdown of top status codes</p>
-        </div>
+        <RadarChart outerRadius={130} width={400} height={400} data={radarData}>
+            <PolarGrid stroke="#39ff14" />
+            <PolarAngleAxis dataKey="code" tick={{ fill: "#39ff14", fontSize: 12 }} />
+            <Radar name="Status Codes" dataKey="count" stroke="#39ff14" fill="#39ff14" fillOpacity={0.5} isAnimationActive={false} />
+            <Tooltip formatter={(value: number) => value.toString()} />
+        </RadarChart>
     )
 }
