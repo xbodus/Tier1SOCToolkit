@@ -42,7 +42,6 @@ export default function SIEM() {
 
         socket.current.onmessage = (event) => {
             const data = JSON.parse(event.data)
-            console.log(data)
             addLog(data)
         }
 
@@ -66,7 +65,6 @@ export default function SIEM() {
     }, [logs])
 
     useEffect(() => {
-        console.log(cooldown)
         if (cooldown <= 0) return
 
         const interval = setInterval(() => {
