@@ -92,7 +92,7 @@ export default function SIEM() {
             <div>
                 {reversedLogs.map((log, index) => (
                     <div key={index}>
-                        <p className="white">{JSON.stringify(log)}</p>
+                        <p className="white">{JSON.stringify(log.event.original)} - {JSON.stringify(log.event.outcome)}</p>
                     </div>
                 ))}
             </div>
