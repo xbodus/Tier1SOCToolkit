@@ -3,8 +3,12 @@ import {createContext, useContext, useEffect, useState} from "react";
 
 
 export type StatusInstance = {
-    status_code: string;
-    timestamp: string;
+    200: number,
+    302: number,
+    401: number,
+    403: number,
+    404: number,
+    500: number,
 }
 
 export type IPInstance = Record<string, number>
@@ -21,7 +25,8 @@ export type EventInstance = {
 
 type LogsContextType = {
     logs: object[];
-    statusCodes: StatusInstance[];
+    timeline: TimelineInstance[];
+    statusCodes: StatusInstance;
     logEvents: EventInstance[]
     ips: IPInstance;
     addLog: (log: object) => void;
@@ -32,7 +37,14 @@ const LogsContext = createContext<LogsContextType|null>(null)
 
 export function LogsProvider({children}:{children: any}) {
     const [logs, setLogs] = useState<object[]>([])
-    const [statusCodes, setStatusCodes] = useState<StatusInstance[]>([])
+    const [statusCodes, setStatusCodes] = useState<StatusInstance>({
+        200: 0,
+        302: 0,
+        401: 0,
+        403: 0,
+        404: 0,
+        500: 0
+    })
     const [ips, setIps] = useState<IPInstance>({})
     const [timeline, setTimeline] = useState<TimelineInstance[]>([])
     const [logEvents, setLogEvents] = useState<EventInstance[]>([])
@@ -52,10 +64,12 @@ export function LogsProvider({children}:{children: any}) {
     }
 
     const getStatusCodes = (log:object) => {
-        const time = log.event.created
         const code = log.http.response.status_code
 
-        setStatusCodes(prev => [...prev, {status_code: code, timestamp: time}])
+        setStatusCodes(prev => ({
+            ...prev,
+            [code]: (prev[code] ?? 0) + 1
+        }))
     }
 
     const getTopIp = (log:object) => {
@@ -99,12 +113,13 @@ export function LogsProvider({children}:{children: any}) {
     }, [])
 
     return (
-        <LogsContext.Provider value={{ logs, statusCodes, logEvents, ips, addLog }}>
+        <LogsContext.Provider value={{ logs, statusCodes, timeline, logEvents, ips, addLog }}>
           {children}
         </LogsContext.Provider>
     )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLogsContext() {
   return useContext(LogsContext)!
 }

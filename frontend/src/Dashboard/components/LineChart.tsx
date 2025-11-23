@@ -13,7 +13,7 @@ export default function LineChartVolume({data}:{data: EventInstance[]}) {
     return (
         <>
             <LineChart width={800} height={300} data={visible} responsive>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#39ff14" />
                 <XAxis
                     dataKey="timestamp"
                     tick={{ fill: "#39ff14", fontSize: 12 }}
@@ -23,18 +23,21 @@ export default function LineChartVolume({data}:{data: EventInstance[]}) {
                 />
 
                 <YAxis
+                    dataKey="count"
                     tick={{ fill: "#39ff14", fontSize: 12 }}
                     axisLine={{ stroke: "#39ff14" }}
                     width="auto"
                 />
-                <Tooltip />
+                <Tooltip
+                    labelFormatter={(ts) => new Date(ts).toLocaleTimeString()}
+                />
 
                 <Line
                     type="monotone"
                     dataKey="count"
                     stroke="#39ff14"
                     strokeWidth={2}
-                    activeDot={{ r: 8 }}
+                    isAnimationActive={false}
                 />
             </LineChart>
         </>

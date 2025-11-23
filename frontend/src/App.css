@@ -19,7 +19,7 @@ body, html {
 }
 
 .siem-lab-label {
-    color: #118e11;
+    color: #39ff14;
     writing-mode: sideways-lr;
     text-align: end;
     padding: 2rem 0;
@@ -57,7 +57,7 @@ body, html {
 }
 
 .log-window {
-    height: 65vh;
+    height: 50vh;
 }
 
 
@@ -346,5 +346,5 @@ a:hover {
 }
 
 .white{
-    color: #dcd7d7;
+    color: #39ff14;
 }

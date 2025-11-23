@@ -1,38 +1,25 @@
-import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
-import {useState, useEffect} from "react";
+import {type StatusInstance} from "../ContextWrappers/LogsContext.tsx";
+import {PolarAngleAxis, PolarGrid, Radar, RadarChart, Tooltip} from "recharts";
 
 
+export interface RadarDatum {
+  code: string;
+  count: number;
+}
 
-export default function StatusCodeBreakdown() {
-    const {statusCodes} = useLogsContext()
-    const [codes, setCodes] = useState<Record<string, number>>({})
-
-    useEffect(() => {
-        const handleCodes = (code: string) => {
-            setCodes(prev => ({
-                ...prev,
-                [code]: (prev[code] ?? 0) + 1
-            }))
-        }
-
-        for (let i = 0; i < statusCodes.length; i++) {
-            const sc = statusCodes[i].status_code
-            handleCodes(sc)
-        }
-    }, [statusCodes])
-
+export default function StatusCodeBreakdown({data}:{data:StatusInstance}) {
+    const radarData: RadarDatum[] = Object.entries(data).map(
+        ([code, count]) => ({
+            code,
+            count
+        })
+    )
     return (
-        <div>
-            {Object.keys(codes).length === 0 && (<p className="white">Waiting for data</p>)}
-            {codes && (
-                <>
-                    {Object.entries(codes).map(([code, count]) => (
-                        <p key={code} className="white">
-                            {code}: {count}
-                        </p>
-                    ))}
-                </>
-            )}
-        </div>
+        <RadarChart outerRadius={130} width={400} height={400} data={radarData}>
+            <PolarGrid stroke="#39ff14" />
+            <PolarAngleAxis dataKey="code" tick={{ fill: "#39ff14", fontSize: 12 }} />
+            <Radar name="Status Codes" dataKey="count" stroke="#39ff14" fill="#39ff14" fillOpacity={0.5} isAnimationActive={false} />
+            <Tooltip formatter={(value: number) => value.toString()} />
+        </RadarChart>
     )
 }
