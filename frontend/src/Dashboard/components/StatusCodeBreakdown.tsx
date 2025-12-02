@@ -15,11 +15,15 @@ export default function StatusCodeBreakdown({data}:{data:StatusInstance}) {
         })
     )
     return (
-        <RadarChart outerRadius={130} width={400} height={400} data={radarData}>
-            <PolarGrid stroke="#39ff14" />
-            <PolarAngleAxis dataKey="code" tick={{ fill: "#39ff14", fontSize: 12 }} />
-            <Radar name="Status Codes" dataKey="count" stroke="#39ff14" fill="#39ff14" fillOpacity={0.5} isAnimationActive={false} />
-            <Tooltip formatter={(value: number) => value.toString()} />
-        </RadarChart>
+        <div className="graph-container">
+            <h2 className="chart-title">Status Codes:</h2>
+            <RadarChart outerRadius={130} width={400} height={300} data={radarData}>
+                <PolarGrid stroke="#39ff14" />
+                <PolarAngleAxis dataKey="code" tick={{ fill: "#39ff14", fontSize: 12 }} />
+                <Radar name="Status Codes" dataKey="count" stroke="#39ff14" fill="#39ff14" fillOpacity={0.5} isAnimationActive={false} />
+                <Tooltip formatter={(value: number) => value.toString()} />
+            </RadarChart>
+        </div>
+
     )
 }

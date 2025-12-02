@@ -92,7 +92,7 @@ export default function SIEM() {
             <div>
                 {reversedLogs.map((log, index) => (
                     <div key={index}>
-                        <p className="white">{JSON.stringify(log)}</p>
+                        <p className="white">{JSON.stringify(log.event.original)} - {JSON.stringify(log.event.outcome)}</p>
                     </div>
                 ))}
             </div>
@@ -100,12 +100,13 @@ export default function SIEM() {
     }
 
     return (
-        <div>
+        <>
+            <h2 className="chart-title">Activity Logs:</h2>
             <div className="log-window overflow-y">
                 {cooldown > 0 && (<CooldownTimer />)}
                 {isLoading && cooldown <= 0 && (<p className="white">Waiting for logs...</p>)}
                 {!isLoading && cooldown <=0 && logs && (<Logs />)}
             </div>
-        </div>
+        </>
     )
 }
