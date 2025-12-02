@@ -100,12 +100,13 @@ export default function SIEM() {
     }
 
     return (
-        <div>
+        <>
+            <h2 className="chart-title">Activity Logs:</h2>
             <div className="log-window overflow-y">
                 {cooldown > 0 && (<CooldownTimer />)}
                 {isLoading && cooldown <= 0 && (<p className="white">Waiting for logs...</p>)}
                 {!isLoading && cooldown <=0 && logs && (<Logs />)}
             </div>
-        </div>
+        </>
     )
 }

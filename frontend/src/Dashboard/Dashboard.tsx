@@ -1,23 +1,23 @@
 import '@vitejs/plugin-react/preamble'
 
-import React, {useState, Suspense } from "react"
+import React, {useState, Suspense, type ReactNode} from "react"
 
 import Simulations from "./components/SimControls.tsx"
 
 
 export default function Dashboard() {
-    const [content, setContent] = useState(1)
-    const [simulation, setSimulation] = useState<int|null>(null)
+    const [content, setContent] = useState<number>(1)
+    const [simulation, setSimulation] = useState<number|null>(null)
 
     const SIEMContent = React.lazy(() => import("./components/SIEMContent"));
     const AnalyzerContent = React.lazy(() => import("./components/AnalyzerContent"));
 
-    const VIEWS = {
+    const VIEWS: { [key: number]: ReactNode } = {
         1: <SIEMContent />,
         2: <AnalyzerContent />
     }
 
-    const handleSimulation = (number:int) => {
+    const handleSimulation = (number:number) => {
         setSimulation(number)
     }
 
@@ -26,7 +26,7 @@ export default function Dashboard() {
             {!simulation &&  (<Simulations handleSim={handleSimulation} />)}
             {simulation && (
             <section id='react-dashboard' className='fullscreen'>
-                <h1 className="siem-lab-label">Rouge Operations Operations Center</h1>
+                <h1 className="siem-lab-label">Rouge Operations Security Center</h1>
                 <section className="siem-lab-content">
                     <Suspense fallback={<p>Loading…</p>}>
                         {VIEWS[content]}
@@ -35,13 +35,14 @@ export default function Dashboard() {
 
                 <section id="routing">
                     <div>
-                        <button className="siem-lab-control" onClick={() => setContent(1)}>SIEM</button>
-                        <button className="siem-lab-control" onClick={() => setContent(2)}>Analyze</button>
+                        <button className={`siem-lab-control ${content === 1 ? "active" : ""}`} onClick={() => setContent(1)}>SIEM</button>
+                        <button className={`siem-lab-control ${content === 2 ? "active" : ""}`} onClick={() => setContent(2)}>Analyze</button>
                     </div>
-                    <a href="/" className="siem-lab-control"><button>Leave Lab</button></a>
+                    <a href="/"><button className="siem-lab-exit">Leave Lab</button></a>
                 </section>
             </section>
             )}
+            <div id="crt-overlay"></div>
         </>
     )
 }

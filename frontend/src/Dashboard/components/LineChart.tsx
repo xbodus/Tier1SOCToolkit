@@ -11,7 +11,8 @@ export default function LineChartVolume({data}:{data: EventInstance[]}) {
     const visible = data.filter(d => now - d.timestamp <= WINDOW)
 
     return (
-        <>
+        <div className="graph-container">
+            <h2 className="chart-title">Activity:</h2>
             <LineChart width={800} height={300} data={visible} responsive>
                 <CartesianGrid strokeDasharray="3 3" stroke="#39ff14" />
                 <XAxis
@@ -40,6 +41,6 @@ export default function LineChartVolume({data}:{data: EventInstance[]}) {
                     isAnimationActive={false}
                 />
             </LineChart>
-        </>
+        </div>
     )
 }

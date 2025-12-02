@@ -6,37 +6,154 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100dvh;
-    width: 100%;
+    width: 100dvw;
 }
 
 /* dashboard */
+#crt-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999999;
+    mix-blend-mode: overlay;
+    background: repeating-linear-gradient(
+       to bottom,
+       rgba(57,255,20,.5) 0,
+       rgba(0,0,0,.1) 1px,
+       transparent 4px
+    );
+}
+
 #dashboard {
     background-color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    font-family: "Doto", monospace;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+    height: 100%;
+    width: 100%;
 }
 
 #react-dashboard {
     display: flex;
+    padding: 1rem 0;
+}
+
+.sim-controls {
+    margin: 0 auto;
+}
+
+.sim-title {
+    font-family: "Orbitron", monospace;
+    color: #39ff14;
+    font-size: 2rem;
+    text-align: center;
+}
+
+.sim-control {
+    font-family: "Orbitron", monospace;
+    color: #39ff14;
+    background-color: transparent;
+    border: 2px solid #39ff14;
+    border-radius: 50px;
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
+    inset 0 0 5px rgba(57, 255, 20, 0.5);
+    padding: .5rem 1rem;
+}
+
+.sim-control:hover {
+    background-color: rgba(57, 255, 20, 0.5);
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.5),
+    inset 0 0 8px rgba(57, 255, 20, 0.5);
+    transition: 1s;
 }
 
 .siem-lab-label {
-    color: #39ff14;
+    position: relative;
+    font-family: "Orbitron", monospace;
+    font-weight: 900;
+    color: rgba(57, 255, 20, 0.8);
     writing-mode: sideways-lr;
     text-align: end;
-    padding: 2rem 0;
+    padding: 1rem .4rem 1rem .25rem;
+    border: 2px solid #39ff14;
+    border-radius: 50px;
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
+    inset 0 0 5px rgba(57, 255, 20, 0.5);
 }
 
 .siem-lab-content {
+    border: 2px solid #39ff14;
+    border-radius: 10px 0 10px 10px;
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
+    inset 0 0 5px rgba(57, 255, 20, 0.5);
     width: 100%;
+    padding: 1rem;
+    z-index: 1;
 }
 
 #routing {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    align-items: start;
 }
 
 .siem-lab-control {
+    position: relative;
+    right: 2px;
     writing-mode: sideways-rl;
+    background-color: #1a1a1a;
+    font-family: "Orbitron", monospace;
+    color: #39ff14;
+    border-top: 2px solid #39ff14;
+    border-bottom: 2px solid #39ff14;
+    border-right: 2px solid #39ff14;
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    cursor: pointer;
+    z-index: 0;
+}
+
+.siem-lab-control::before {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 0;
+    bottom: 0;
+    width: 7px;
+    background: #1a1a1a;
+    z-index: 10;
+}
+
+.siem-lab-control::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    left: 0;
+    right: -2px;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.siem-lab-control.active {
+    right: 2px;
+    z-index: 20;
+}
+
+.siem-lab-exit {
+    position: relative;
+    left: 4px;
+    writing-mode: sideways-rl;
+    background-color: transparent;
+    font-family: "Orbitron", monospace;
+    color: #39ff14;
+    border: 2px solid #39ff14;
+    border-radius: 10px;
 }
 
 
@@ -44,6 +161,7 @@ body, html {
 .siem-content {
     display: flex;
     flex-direction: column;
+    gap: 20px;
     justify-content: space-between;
     height: 100%;
 }
@@ -51,15 +169,32 @@ body, html {
 .visuals-wrapper {
     display: flex;
     gap: 20px;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
+    height: 50%;
+}
+
+.graph-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     height: 100%;
 }
 
-.log-window {
-    height: 50vh;
+.chart-title {
+    font-family: "Orbitron", monospace;
+    color: #39ff14;
+    font-size: 1rem;
 }
 
+.log-window {
+    padding: 0 .5rem;
+    height: 50%;
+    border: 2px solid #39ff14;
+    border-radius: 7px;
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
+    inset 0 0 5px rgba(57, 255, 20, 0.5);
+}
 
 
 
@@ -297,6 +432,14 @@ body, html {
     gap: 10px;
 }
 
+.gap-30 {
+    gap: 30px;
+}
+
+.center {
+    justify-content: center;
+}
+
 .p-1 {
     padding: .25rem;
 }
@@ -343,6 +486,8 @@ a:hover {
 
 .overflow-y {
     overflow-y: auto;
+    scrollbar-color: #39ff14 transparent;
+    scrollbar-width: thin;
 }
 
 .white{

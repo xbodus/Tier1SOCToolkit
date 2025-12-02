@@ -10,8 +10,9 @@ export interface PieDatum {
 export default function PieChartVolume({data}:{data:PieDatum[]}) {
 
     return (
-        <div>
-            <PieChart width={350} height={350} responsive>
+        <div className="graph-container" style={{overflow: "visible"}}>
+            <h2 className="chart-title">Top IPs:</h2>
+            <PieChart width={350} height={300} style={{overflow: "visible"}} responsive>
                 <Pie
                     data={data}
                     innerRadius="60%"
