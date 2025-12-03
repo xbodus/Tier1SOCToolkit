@@ -10,7 +10,7 @@ export default function Simulations({handleSim}:{handleSim:(arg0: number) => voi
             <h2 className="sim-title">Choose your experience</h2>
             <div className="flex gap-10 center">
                 {simulations.map((sim, i) => (
-                    <button key={i} className="sim-control" onClick={() => handleSim(i)}>{sim}</button>
+                    <button key={i} className="sim-control" onClick={() => handleSim(i+1)}>{sim}</button>
                 ))}
             </div>
         </div>
