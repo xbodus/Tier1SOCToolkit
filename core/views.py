@@ -1,5 +1,7 @@
 import json
 import time
+import os
+from dotenv import load_dotenv
 
 from django.core.cache import cache
 from django.shortcuts import render
@@ -21,14 +23,13 @@ from .toolkit.utils import is_valid_target
 from .toolkit.log_analyzer import parse_log
 from .toolkit.Workers.tasks import start_es_worker
 
-
-cert_path = r"C:\Users\Titian-OmegaVI\PycharmProjects\SOCTeir1Toolkit-CapstoneProject\elk\certs\elastic-certificates.pem"
+load_dotenv()
 
 es = Elasticsearch(
     ["https://elasticsearch:9200"],
     verify_certs=True,
-    ca_certs=cert_path,
-    basic_auth=("elastic", "Gan5Q2++ncK-6FCTRjsx")
+    ca_certs=os.getenv("CERT_PATH"),
+    basic_auth=("elastic", os.getenv("ES_PASSWORD"))
 )
 
 def home(request):
