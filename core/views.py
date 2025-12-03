@@ -3,7 +3,7 @@ import time
 
 from django.core.cache import cache
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, StreamingHttpResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -13,6 +13,8 @@ import ipaddress
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
+from elasticsearch import Elasticsearch
+
 from .toolkit.port_scanner import threaded_port_scan
 from .toolkit.ip_reputation_checker import ip_check
 from .toolkit.utils import is_valid_target
@@ -20,7 +22,14 @@ from .toolkit.log_analyzer import parse_log
 from .toolkit.Workers.tasks import start_es_worker
 
 
+cert_path = r"C:\Users\Titian-OmegaVI\PycharmProjects\SOCTeir1Toolkit-CapstoneProject\elk\certs\elastic-certificates.pem"
 
+es = Elasticsearch(
+    ["https://elasticsearch:9200"],
+    verify_certs=True,
+    ca_certs=cert_path,
+    basic_auth=("elastic", "Gan5Q2++ncK-6FCTRjsx")
+)
 
 def home(request):
     return render(request, 'core/home.html')
@@ -102,6 +111,43 @@ def ip_reputation(request):
 
 
 
+def download_logs(request):
+    resp = es.search(
+        index="filebeat-*",
+        body={"query": {"match_all": {}}},
+        scroll="2m",
+        size=1000,
+    )
+
+    scroll_id = resp["_scroll_id"]
+    hits = resp["hits"]["hits"]
+
+    def generate():
+        nonlocal scroll_id, hits
+
+        while hits:
+            # Output entries as NDJSON lines
+            for hit in hits:
+                yield json.dumps(hit["_source"]) + "\n"
+
+            # Scroll to next page
+            r = es.scroll(
+                scroll_id=scroll_id,
+                scroll="2m",
+            )
+            scroll_id = r["_scroll_id"]
+            hits = r["hits"]["hits"]
+
+    response = StreamingHttpResponse(
+        generate(),
+        content_type="application/x-ndjson"
+    )
+    response["Content-Disposition"] = 'attachment; filename="logs.ndjson"'
+
+    return response
+
+
+
 def log_analyzer(request):
     if request.method == "POST":
         try:
@@ -112,13 +158,14 @@ def log_analyzer(request):
                 data = parse_log(file)
                 elapsed = start_time - datetime.now()
 
-                context = {
-                    "results" : data,
-                    "total": len(data) if data else None,
-                    "elapsed": elapsed,
-                }
-
-                return JsonResponse(context)
+                # context = {
+                #     "results" : data,
+                #     "total": len(data) if data else None,
+                #     "elapsed": elapsed,
+                # }
+                #
+                # return JsonResponse(context)
+                return JsonResponse({"results" : "File came through"})
         except Exception as e:
             return JsonResponse({"error": str(e)})
 
@@ -151,7 +198,6 @@ def log_ingestion(request):
 
 @require_GET
 def request_logs(request):
-    # Generate a session key for the user if not already present
     print("Starting request")
     if not request.session.session_key:
         request.session.create()

@@ -9,5 +9,6 @@ urlpatterns = [
     path('api/ip_reputation', views.ip_reputation, name="ip_reputation"),
     path('api/log_analyzer', views.log_analyzer, name="log_analyzer"),
     path('api/logs/ingest', views.log_ingestion, name="log_ingest"),
-    path('api/start-logs', views.request_logs, name="request_logs")
+    path('api/start-logs', views.request_logs, name="request_logs"),
+    path("api/download-logs/", views.download_logs, name="download_logs"),
 ]

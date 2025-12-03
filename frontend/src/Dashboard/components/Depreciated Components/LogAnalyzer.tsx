@@ -1,5 +1,5 @@
 import {getCookie} from "../../Utils/utils.tsx";
-import {useState} from "react";
+import React, {type FormEvent, useState} from "react";
 
 
 export default function LogAnalyzer() {
@@ -26,7 +26,7 @@ export default function LogAnalyzer() {
             method: "POST",
             credentials: "include",
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                'X-CSRFToken': getCookie('csrftoken') as string
             },
             body: formData
         })

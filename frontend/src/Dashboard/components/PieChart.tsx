@@ -12,7 +12,8 @@ export default function PieChartVolume({data}:{data:PieDatum[]}) {
     return (
         <div className="graph-container" style={{overflow: "visible"}}>
             <h2 className="chart-title">Top IPs:</h2>
-            <PieChart width={350} height={300} style={{overflow: "visible"}} responsive>
+            {data.length === 0 && (<p style={{height: 300, width: 400, color: "#39ff14", display: "flex", alignItems: "center", justifyContent: "center"}}>No Data</p>)}
+            {data.length > 0 && (<PieChart width={400} height={300} responsive>
                 <Pie
                     data={data}
                     innerRadius="60%"
@@ -34,7 +35,7 @@ export default function PieChartVolume({data}:{data:PieDatum[]}) {
                     ))}
                 </Pie>
                 <Tooltip />
-            </PieChart>
+            </PieChart>)}
         </div>
     )
 }

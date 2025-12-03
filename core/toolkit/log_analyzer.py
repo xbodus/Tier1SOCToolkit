@@ -1,7 +1,8 @@
-import re
 import time
+import json
+from collections import Counter
 from concurrent.futures.thread import ThreadPoolExecutor
-from datetime import date
+from datetime import date, datetime
 
 from django.forms import model_to_dict
 
@@ -15,86 +16,54 @@ from django.db.models import F
 
 
 
+class LogAnalyzer:
+    def __init__(self, data):
+        self.data = data
+
+    def get_requests(self):
+        sorted_logs = sorted(
+            self.data,
+            key=lambda x: datetime.fromisoformat(x["timestamp"])
+        )
+
+        start = datetime.fromisoformat(sorted_logs[0]["timestamp"].replace("Z", "+00:00"))
+        end = datetime.fromisoformat(sorted_logs[-1]["timestamp"].replace("Z", "+00:00"))
+
+        time_range = end - start
+        minutes = time_range.total_seconds() / 60
+
+        results = Counter()
+        for event in sorted_logs:
+            ip = event["ip"]
+            results[ip] += 1
+
+        return results, minutes
+
+
+
 
 # Open file and return log lines
 def read_file(file) -> list[str]|None:
     lines = []
     for line in file:
-        decoded_line = line.decode("utf-8").strip()
-        if decoded_line:
-            lines.append(decoded_line)
+        log_json = json.loads(line)
+
+        timestamp = log_json.get("event", {}).get("created")
+        ip = log_json.get("source", {}).get("ip")
+        event = log_json.get("event", {}).get("original")
+        status_code = log_json.get("http", {}).get("response", {}).get("status_code")
+
+        log_data = {
+            "timestamp": timestamp,
+            "ip": ip,
+            "event": event,
+            "status_code": status_code
+        }
+        if log_data:
+            lines.append(log_data)
 
     return lines
 
-
-# Following section: Takes log lines and parses for timestamps, SRC/DST, protocol, SPT/DPT
-def parse_for_timestamp(line:str) -> str | None:
-    pattern = r'^[a-zA-Z]+\s\d{1,2}\s\d{2}(?::\d{2}){2}'
-    match = re.search(pattern, line)
-
-    if match:
-        return match.group(0)
-
-    return None
-
-
-def parse_for_ips(line: str) -> list[dict]|None:
-    pattern = r'(SRC|DST)=(\d{1,3}(?:\.\d{1,3}){3}|\b(?:[a-fA-F0-9:]+:+)+[a-fA-F0-9]+\b)'
-    matches = re.findall(pattern, line)
-
-    if matches:
-        match_details = []
-        for label, ip in matches:
-            details = {
-                "label": label,
-                "ip": ip
-            }
-            match_details.append(details)
-
-        return match_details
-
-    return None
-
-
-def parse_for_proto(line:str) -> str|None:
-    pattern = r"PROTO=(\w+)"
-    match = re.search(pattern, line)
-
-    if match:
-        return match.group(1)
-
-    return None
-
-
-def parse_for_port(line:str) -> list[dict]|None:
-    pattern = r'(SPT|DPT)=(\d+)'
-    matches = re.findall(pattern, line)
-
-    match_details = []
-    if matches:
-        for label, port in matches:
-            match_details.append({
-                "label": label,
-                "port": port
-            })
-        return match_details
-
-    return None
-
-
-# Main parse function
-def parse_data(line):
-    timestamp = parse_for_timestamp(line)
-    ips = parse_for_ips(line)
-    protocol = parse_for_proto(line)
-    ports = parse_for_port(line)
-
-    return {
-        "timestamp": timestamp,
-        "ips": ips,
-        "protocol": protocol,
-        "ports": ports
-    }
 
 
 def check_daily_count():
@@ -245,31 +214,39 @@ def threaded_ip_check(log_lines):
 def parse_log(file):
     log_lines = read_file(file)
 
-    malicious_results = threaded_ip_check(log_lines)
 
-    agg = {}
-    for result in malicious_results:
-        line = result["line"]
-        for data in result["malicious_ips"]:
-            ip = data["ip_address"]
-            if ip not in agg:
-                agg[ip] = {
-                    "ip": ip,
-                    "data": {
-                        "abuse_confidence_score": data.get("abuse_confidence_score", "ACS Error"),
-                        "country_code": data.get("country_code", "CC Error"),
-                        "isp": data.get("isp", "ISP Error"),
-                        "last_reported_at": data.get("last_reported_at", "Last Reported Error")
-                    },
-                    "lines": [],
-                    "seen": 0
-                }
-            agg[ip]["lines"].append(line)
-            agg[ip]["seen"] += 1
+    analyzer = LogAnalyzer(log_lines)
 
-    formatted_data = list(agg.values())
+    results, minutes = analyzer.get_requests()
 
-    return formatted_data
+    print(f"Results: {results}, Time: {minutes} minutes")
+
+    return None
+    # malicious_results = threaded_ip_check(log_lines)
+    #
+    # agg = {}
+    # for result in malicious_results:
+    #     line = result["line"]
+    #     for data in result["malicious_ips"]:
+    #         ip = data["ip_address"]
+    #         if ip not in agg:
+    #             agg[ip] = {
+    #                 "ip": ip,
+    #                 "data": {
+    #                     "abuse_confidence_score": data.get("abuse_confidence_score", "ACS Error"),
+    #                     "country_code": data.get("country_code", "CC Error"),
+    #                     "isp": data.get("isp", "ISP Error"),
+    #                     "last_reported_at": data.get("last_reported_at", "Last Reported Error")
+    #                 },
+    #                 "lines": [],
+    #                 "seen": 0
+    #             }
+    #         agg[ip]["lines"].append(line)
+    #         agg[ip]["seen"] += 1
+    #
+    # formatted_data = list(agg.values())
+
+    # return formatted_data
 
 
 

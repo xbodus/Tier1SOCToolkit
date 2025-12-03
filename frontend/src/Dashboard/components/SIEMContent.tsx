@@ -4,6 +4,8 @@ import PieChartVolume, {type PieDatum} from "./PieChart.tsx";
 import StatusCodeBreakdown from "./StatusCodeBreakdown.tsx";
 import SIEM from "./SIEM.tsx";
 import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
+import DownloadLogs from "./DownloadLogs.tsx";
+import StatusNotification from "./StatusNotification.tsx";
 
 
 export default function SIEMContent() {
@@ -21,7 +23,14 @@ export default function SIEMContent() {
                 <PieChartVolume data={pieData} />
                 <StatusCodeBreakdown data={statusCodes} />
             </VisualsWrapper>
-            <SIEM />
+            <h2 className="chart-title">Activity Logs:</h2>
+            <div style={{ display: "flex", gap: 10, width: "100%", height: "45%" }}>
+                <SIEM />
+                <div className="side-controls">
+                    <StatusNotification alert={false} />
+                    <DownloadLogs />
+                </div>
+            </div>
         </div>
     )
 }
