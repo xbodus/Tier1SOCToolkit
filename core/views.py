@@ -113,9 +113,23 @@ def ip_reputation(request):
 
 
 def download_logs(request):
+    start = request.GET.get("start")
+    end = request.GET.get("end")
+
+    if not start or not end:
+        return HttpResponseBadRequest("Missing start or end time")
+
     resp = es.search(
         index="filebeat-*",
-        body={"query": {"match_all": {}}},
+        body={"query": {
+                "range": {
+                    "@timestamp": {
+                        "gte": start,
+                        "lte": end
+                    }
+                }
+            }
+        },
         scroll="2m",
         size=1000,
     )

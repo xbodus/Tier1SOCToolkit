@@ -1,3 +1,4 @@
+import re
 import time
 import json
 from collections import Counter
@@ -20,7 +21,28 @@ class LogAnalyzer:
     def __init__(self, data):
         self.data = data
 
-    def get_requests(self):
+    SQLI_PATTERNS = [
+        r"(\bor\b|\band\b)\s+1\s*=\s*1",
+        r"union\s+select",
+        r"select\s+.+\s+from",
+        r"insert\s+into",
+        r"update\s+.+\s+set",
+        r"delete\s+from",
+        r"drop\s+table",
+        r"sle(e?)p\s*\(",
+        r"benchmark\s*\(",
+        r"waitfor\s+delay",
+        r"--",
+        r"#",
+        r"/\*.*?\*/",
+        r"%27", r"%22",
+        r"'",
+        r"\"",
+    ]
+
+    SQLI_REGEX = re.compile("|".join(SQLI_PATTERNS), re.IGNORECASE)
+
+    def analyze_requests(self):
         sorted_logs = sorted(
             self.data,
             key=lambda x: datetime.fromisoformat(x["timestamp"])
@@ -30,14 +52,64 @@ class LogAnalyzer:
         end = datetime.fromisoformat(sorted_logs[-1]["timestamp"].replace("Z", "+00:00"))
 
         time_range = end - start
-        minutes = time_range.total_seconds() / 60
+        minutes = int(time_range.total_seconds() / 60)
+        seconds = int(time_range.total_seconds())
 
         results = Counter()
         for event in sorted_logs:
             ip = event["ip"]
             results[ip] += 1
 
-        return results, minutes
+        return results, minutes, seconds
+
+
+    def analyze_auth_attempts(self):
+        streaks = {}
+        alerts = []
+        unsuccessful = []
+        for event in self.data:
+            ip = event["ip"]
+            path = event["path"]
+
+            if path != "/login":
+                continue
+            print(event["status_code"])
+            if event["status_code"] == 401:
+                streaks[ip] = streaks.get(ip, 0) + 1
+            elif event["status_code"] == 302:
+                if streaks.get(ip, 0) >= 5:
+                    alerts.append(f"Brute-force succeeded from IP: {ip}")
+                streaks[ip] = 0
+
+        for address, count in streaks.items():
+            if count >= 5:
+                unsuccessful.append(f"Unsuccessful brute force attempt from {address}: {count} attempts")
+
+        if len(alerts) > 0 and len(unsuccessful) > 0:
+            return alerts, unsuccessful
+
+        if len(alerts) > 0:
+            return alerts
+
+        if len(unsuccessful) > 0:
+            return unsuccessful
+
+        return "No brute force attacks suspected"
+
+
+    def analyze_sql_injection(self):
+        suspicious = []
+
+        for event in self.data:
+            url = event.get("path")
+
+            if not isinstance(url, str):
+                continue
+
+            if self.SQLI_REGEX.search(url):
+                suspicious.append(event["ip"])
+
+        return Counter(suspicious)
 
 
 
@@ -52,17 +124,26 @@ def read_file(file) -> list[str]|None:
         ip = log_json.get("source", {}).get("ip")
         event = log_json.get("event", {}).get("original")
         status_code = log_json.get("http", {}).get("response", {}).get("status_code")
+        outcome = log_json.get("event", {}).get("outcome")
+        path = log_json.get("url", {}).get("path", {})
 
         log_data = {
             "timestamp": timestamp,
             "ip": ip,
             "event": event,
-            "status_code": status_code
+            "status_code": status_code,
+            "outcome": outcome,
+            "path": path
         }
         if log_data:
             lines.append(log_data)
 
-    return lines
+    sorted_lines = sorted(
+        lines,
+        key=lambda x: datetime.fromisoformat(x["timestamp"])
+    )
+
+    return sorted_lines
 
 
 
@@ -217,9 +298,12 @@ def parse_log(file):
 
     analyzer = LogAnalyzer(log_lines)
 
-    results, minutes = analyzer.get_requests()
+    results, minutes, seconds = analyzer.analyze_requests()
 
-    print(f"Results: {results}, Time: {minutes} minutes")
+    print(f"Results: {results}, Time: {minutes} minutes {seconds} seconds")
+
+    brute_force_attempts = analyzer.analyze_auth_attempts()
+    print(brute_force_attempts)
 
     return None
     # malicious_results = threaded_ip_check(log_lines)

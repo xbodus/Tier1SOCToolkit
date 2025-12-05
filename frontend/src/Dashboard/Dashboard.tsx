@@ -5,19 +5,22 @@ import React, {useState, Suspense, type ReactNode} from "react"
 import Simulations from "./components/SimControls.tsx"
 
 
+
 export default function Dashboard() {
     const [content, setContent] = useState<number>(1)
     const [simulation, setSimulation] = useState<number|null>(null)
+    const [startTime, setStartTime] = useState<string|null>(null)
 
     const SIEMContent = React.lazy(() => import("./components/SIEMContent"));
     const AnalyzerContent = React.lazy(() => import("./components/AnalyzerContent"));
 
     const VIEWS: { [key: number]: ReactNode } = {
-        1: <SIEMContent />,
+        1: <SIEMContent start={startTime} />,
         2: <AnalyzerContent />
     }
 
     const handleSimulation = (number:number) => {
+        setStartTime(new Date().toISOString())
         setSimulation(number)
     }
 
