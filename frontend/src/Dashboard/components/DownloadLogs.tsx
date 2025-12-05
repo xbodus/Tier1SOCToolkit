@@ -1,14 +1,20 @@
 
 
+export default function DownloadLogs({start}: {start: string|null}) {
 
-export default function DownloadLogs() {
     const downloadLogs = () => {
-        window.location.href = "/api/download-logs/";
-    };
+        if (!start) {
+            alert("No simulation start time found.")
+            return
+        }
+        const current = new Date().toISOString()
+
+        window.location.href =  `/api/download-logs?start=${encodeURIComponent(start)}&end=${encodeURIComponent(current)}`
+    }
 
     return (
         <button
-            onClick={downloadLogs}
+            onClick={() => downloadLogs()}
             className="sim-control"
             style={{ height: "15%", width: "100%" }}
         >

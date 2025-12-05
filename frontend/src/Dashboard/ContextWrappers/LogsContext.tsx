@@ -1,4 +1,10 @@
-import {createContext, useContext, useEffect, useState} from "react";
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useRef,
+    useState
+} from "react";
 
 
 
@@ -21,6 +27,11 @@ export type TimelineInstance = {
 export type EventInstance = {
     timestamp: number,
     count: number
+}
+
+
+export type SessionInstance = {
+    start_time: string
 }
 
 type LogsContextType = {

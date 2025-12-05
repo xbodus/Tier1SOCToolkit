@@ -100,12 +100,10 @@ export default function SIEM() {
     }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column" }}>
-            <div className="log-window overflow-y">
-                {cooldown > 0 && (<CooldownTimer />)}
-                {isLoading && cooldown <= 0 && (<p className="white">Waiting for logs...</p>)}
-                {!isLoading && cooldown <=0 && logs && (<Logs />)}
-            </div>
+        <div className="log-window overflow-y">
+            {cooldown > 0 && (<CooldownTimer />)}
+            {isLoading && cooldown <= 0 && (<p className="white">Waiting for logs...</p>)}
+            {!isLoading && cooldown <=0 && logs && (<Logs />)}
         </div>
     )
 }
