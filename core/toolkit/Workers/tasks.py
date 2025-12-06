@@ -7,6 +7,8 @@ from asgiref.sync import async_to_sync
 from django.core.cache import cache
 from elasticsearch import Elasticsearch
 
+from core.toolkit.log_monitor import log_monitor
+
 # Path to your PEM file
 cert_path = r"C:\Users\Titian-OmegaVI\PycharmProjects\SOCTeir1Toolkit-CapstoneProject\elk\certs\elastic-certificates.pem"
 
@@ -31,7 +33,6 @@ def start_es_worker(message, session_key):
 
 
 def send_user_log(message, session_key):
-    print("Task started")
     stop_key = f"stop_logs_{session_key}"
     index = "filebeat-*"
     last_timestamp = datetime.now(timezone.utc).isoformat()
@@ -61,18 +62,21 @@ def send_user_log(message, session_key):
             continue
 
         hits = results.get("hits", {}).get("hits", [])
-        print(hits)
         for hit in hits:
             source = hit["_source"]
             ts = source["@timestamp"]
             last_timestamp = ts  # update the pointer
+
+            # analyze hit and monitor for potential malicious activity.
+            alert = log_monitor(source)
 
             # send to websocket group
             async_to_sync(channel_layer.group_send)(
                 f"user_logs_{session_key}",
                 {
                     "type": "send_log",
-                    "message": source
+                    "message": source,
+                    "alert": alert
                 }
             )
 

@@ -34,4 +34,7 @@ class LogConsumer(AsyncWebsocketConsumer):
 
     # Called by the background poller
     async def send_log(self, event):
-        await self.send(text_data=json.dumps(event["message"]))
+        await self.send(text_data=json.dumps({
+            "message": event.get("message"),
+            "alert": event.get("alert", False)
+        }))

@@ -2,7 +2,6 @@ import {
     createContext,
     useContext,
     useEffect,
-    useRef,
     useState
 } from "react";
 
@@ -40,7 +39,8 @@ type LogsContextType = {
     statusCodes: StatusInstance;
     logEvents: EventInstance[]
     ips: IPInstance;
-    addLog: (log: object) => void;
+    alert: {detected: boolean, type: string|null};
+    addLog: (log: object, alert: { detected: boolean; alert_type: string | null }) => void;
 }
 
 const LogsContext = createContext<LogsContextType|null>(null)
@@ -59,12 +59,17 @@ export function LogsProvider({children}:{children: any}) {
     const [ips, setIps] = useState<IPInstance>({})
     const [timeline, setTimeline] = useState<TimelineInstance[]>([])
     const [logEvents, setLogEvents] = useState<EventInstance[]>([])
+    const [alert, setAlert] = useState<{detected: boolean, type: string|null}>({detected: false, type: null})
 
-    const addLog = (log: object) => {
+    const addLog = (log: object, alert: {detected: boolean, alert_type: string|null}) => {
         setLogs(prev => [...prev, log])
         getStatusCodes(log)
         getTopIp(log)
         getTimeline(log)
+
+        if (alert) {
+            setAlert({detected: alert.detected, type: alert.alert_type || null})
+        }
     }
 
     const getTimeline = (log:object)=> {
@@ -124,7 +129,7 @@ export function LogsProvider({children}:{children: any}) {
     }, [])
 
     return (
-        <LogsContext.Provider value={{ logs, statusCodes, timeline, logEvents, ips, addLog }}>
+        <LogsContext.Provider value={{ logs, statusCodes, timeline, logEvents, ips, alert, addLog }}>
           {children}
         </LogsContext.Provider>
     )

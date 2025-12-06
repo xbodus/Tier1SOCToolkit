@@ -1,11 +1,13 @@
 import React, {type FormEvent, useEffect, useState} from "react";
 import {getCookie} from "../Utils/utils.tsx";
+import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
 
 
 export default function FileInput() {
     const [file, setFile] = useState<File|null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [data, setData] = useState(null)
+    const {alert} = useLogsContext()
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -22,7 +24,7 @@ export default function FileInput() {
         const formData = new FormData()
         formData.append("file", file)
 
-        const response = await fetch("/api/log_analyzer", {
+        const response = await fetch(`/api/log_analyzer?type=${encodeURIComponent(alert.type || "")}`, {
             method: "POST",
             credentials: "include",
             headers: {

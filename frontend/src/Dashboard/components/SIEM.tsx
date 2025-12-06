@@ -42,7 +42,9 @@ export default function SIEM() {
 
         socket.current.onmessage = (event) => {
             const data = JSON.parse(event.data)
-            addLog(data)
+            const message = data.message
+            const alert: {detected: boolean, alert_type: string|null} = data.alert
+            addLog(message, alert)
         }
 
         socket.current.onclose = () => {
