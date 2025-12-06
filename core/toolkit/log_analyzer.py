@@ -3,6 +3,7 @@ import json
 
 from collections import Counter
 from datetime import datetime
+from urllib.parse import unquote_plus
 
 
 
@@ -96,11 +97,12 @@ class LogAnalyzer:
 
         for event in self.data:
             url = event.get("path")
+            decoded_path = unquote_plus(url.lower())
 
             if not isinstance(url, str):
                 continue
 
-            if self.SQLI_REGEX.search(url):
+            if self.SQLI_REGEX.search(decoded_path):
                 suspicious.append(event["ip"])
 
         return Counter(suspicious)
@@ -119,7 +121,7 @@ def read_file(file) -> list[str]|None:
         event = log_json.get("event", {}).get("original")
         status_code = log_json.get("http", {}).get("response", {}).get("status_code")
         outcome = log_json.get("event", {}).get("outcome")
-        path = log_json.get("url", {}).get("path", {})
+        path = log_json.get("url", {}).get("original")
 
         log_data = {
             "timestamp": timestamp,
