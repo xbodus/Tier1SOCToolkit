@@ -9,7 +9,7 @@ import StatusNotification from "./StatusNotification.tsx";
 
 
 export default function SIEMContent({start}: {start:string|null}) {
-    const {logEvents, ips, statusCodes} = useLogsContext()
+    const {logEvents, ips, alert, statusCodes} = useLogsContext()
 
     const pieData:PieDatum[] = Object.entries(ips).map(([ip, count]) => ({
         name: ip,
@@ -27,7 +27,7 @@ export default function SIEMContent({start}: {start:string|null}) {
             <div style={{ display: "flex", gap: 10, width: "100%", height: "45%" }}>
                 <SIEM />
                 <div className="side-controls">
-                    <StatusNotification alert={false} />
+                    <StatusNotification alert={alert.detected} />
                     <DownloadLogs start={start} />
                 </div>
             </div>

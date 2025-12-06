@@ -20,7 +20,7 @@ from elasticsearch import Elasticsearch
 from .toolkit.port_scanner import threaded_port_scan
 from .toolkit.ip_reputation_checker import ip_check
 from .toolkit.utils import is_valid_target
-from .toolkit.log_analyzer import parse_log
+from .toolkit.log_analyzer import analyze_log
 from .toolkit.Workers.tasks import start_es_worker
 
 load_dotenv()
@@ -111,7 +111,7 @@ def ip_reputation(request):
     return None
 
 
-
+# Request logs from session time range and send to React client for download
 def download_logs(request):
     start = request.GET.get("start")
     end = request.GET.get("end")
@@ -168,9 +168,11 @@ def log_analyzer(request):
         try:
             if "file" in request.FILES:
                 file = request.FILES['file']
-                print(file)
+                alert_type = request.GET.get("type")
+
                 start_time = datetime.now()
-                data = parse_log(file)
+                # Store triggered alert in session data. Pull here and pass into Log analyzer
+                data = analyze_log(file, alert_type)
                 elapsed = start_time - datetime.now()
 
                 # context = {
