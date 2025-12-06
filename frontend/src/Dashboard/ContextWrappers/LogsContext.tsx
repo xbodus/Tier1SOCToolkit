@@ -61,14 +61,14 @@ export function LogsProvider({children}:{children: any}) {
     const [logEvents, setLogEvents] = useState<EventInstance[]>([])
     const [alert, setAlert] = useState<{detected: boolean, type: string|null}>({detected: false, type: null})
 
-    const addLog = (log: object, alert: {detected: boolean, alert_type: string|null}) => {
+    const addLog = (log: object, monitor_alert: {detected: boolean, alert_type: string|null}) => {
         setLogs(prev => [...prev, log])
         getStatusCodes(log)
         getTopIp(log)
         getTimeline(log)
 
-        if (alert) {
-            setAlert({detected: alert.detected, type: alert.alert_type || null})
+        if (monitor_alert.detected) {
+            setAlert({detected: monitor_alert.detected, type: monitor_alert.alert_type || null})
         }
     }
 

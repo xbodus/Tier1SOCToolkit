@@ -68,7 +68,7 @@ def send_user_log(message, session_key):
             last_timestamp = ts  # update the pointer
 
             # analyze hit and monitor for potential malicious activity.
-            alert = log_monitor(source)
+            alert = log_monitor(source, session_key)
 
             # send to websocket group
             async_to_sync(channel_layer.group_send)(
