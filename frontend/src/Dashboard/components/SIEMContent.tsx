@@ -9,9 +9,9 @@ import StatusNotification from "./StatusNotification.tsx";
 
 
 export default function SIEMContent({start}: {start:string|null}) {
-    const {logEvents, ips, alert, statusCodes} = useLogsContext()
+    const {logEvents, topIps, alert, statusCodes} = useLogsContext()
 
-    const pieData:PieDatum[] = Object.entries(ips).map(([ip, count]) => ({
+    const pieData:PieDatum[] = Object.entries(topIps).map(([ip, count]) => ({
         name: ip,
         value: count,
     }))

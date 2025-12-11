@@ -43,8 +43,9 @@ export default function SIEM() {
         socket.current.onmessage = (event) => {
             const data = JSON.parse(event.data)
             const message = data.message
-            const alert: {detected: boolean, alert_type: string|null} = data.alert
+            const alert: {detected: boolean, alert_type: string|null, details: object} = data.alert
             addLog(message, alert)
+            console.log(data)
         }
 
         socket.current.onclose = () => {
@@ -94,7 +95,7 @@ export default function SIEM() {
             <div>
                 {reversedLogs.map((log, index) => (
                     <div key={index}>
-                        <p className="white">{JSON.stringify(log.event.original)} - {JSON.stringify(log.event.outcome)}</p>
+                        <p className="white">{log}</p>
                     </div>
                 ))}
             </div>

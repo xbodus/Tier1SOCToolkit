@@ -45,7 +45,7 @@ def send_user_log(message, session_key):
 
         # Elasticsearch query
         query = {
-            "size": 30,
+            "size": 1000,
             "sort": [{"@timestamp": {"order": "asc"}}],
             "query": {
                     "range": {
@@ -58,10 +58,10 @@ def send_user_log(message, session_key):
             results = es.search(index=index, body=query)
         except Exception as e:
             print("ES error:", e)
-            time.sleep(2)
             continue
 
         hits = results.get("hits", {}).get("hits", [])
+
         for hit in hits:
             source = hit["_source"]
             ts = source["@timestamp"]
@@ -79,8 +79,4 @@ def send_user_log(message, session_key):
                     "alert": alert
                 }
             )
-
-            time.sleep(1)
-
-        time.sleep(2)
 
