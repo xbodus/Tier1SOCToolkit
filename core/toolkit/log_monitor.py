@@ -21,9 +21,9 @@ TTL_ALERT_QUEUE = 24 * 60 * 60  # keep alerts for 24h in Redis list by default
 
 # Thresholds
 DOS_LOG_WINDOW = 60  # seconds
-DOS_LOG_THRESHOLD = 1000  # requests in DOS_LONG_WINDOW
-DOS_BURST_WINDOW = 5  # seconds
-DOS_BURST_THRESHOLD = 150  # requests in DOS_BURST_WINDOW
+DOS_LOG_THRESHOLD = 100  # requests in DOS_LONG_WINDOW
+DOS_BURST_WINDOW = 10  # seconds
+DOS_BURST_THRESHOLD = 50  # requests in DOS_BURST_WINDOW
 
 BRUTEFORCE_IP_THRESHOLD = 6  # triggers when attempts > this from same IP
 BRUTEFORCE_USER_THRESHOLD = 10  # triggers when attempts > this for same username
@@ -158,9 +158,7 @@ def sqli_keyword_sequence(decoded: str, keywords: Tuple[str, ...]) -> bool:
 
 
 
-# -------------------------
 # Detection functions
-# -------------------------
 def track_ip(session_id: Optional[str], ip: str, path: str) -> Tuple[bool, Dict[str, Any]]:
     """
     DoS detection:
@@ -358,9 +356,8 @@ def track_sqli(session_id: Optional[str], raw_path: str) -> Tuple[bool, Dict[str
 
 
 
-# -------------------------
+
 # Main dispatcher
-# -------------------------
 def log_monitor(log: Dict[str, Any], session_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Main entrypoint for analyzing a single parsed log object.

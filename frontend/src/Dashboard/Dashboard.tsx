@@ -20,6 +20,10 @@ export default function Dashboard() {
     }
 
     const handleSimulation = (number:number) => {
+        const simulationMapping: Record<number, string> = {
+            1: "/api/start-simulation-1"
+        }
+        fetch(simulationMapping[number])
         setStartTime(new Date().toISOString())
         setSimulation(number)
     }

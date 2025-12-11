@@ -1,7 +1,9 @@
 import json
+import threading
 import time
 import os
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
 
 from django.core.cache import cache
 from django.shortcuts import render
@@ -17,6 +19,8 @@ from django.views.decorators.http import require_GET
 
 from elasticsearch import Elasticsearch
 
+from .toolkit.Simulations.dos_sim import start_dos_simulation
+from .toolkit.Simulations.normal_traffic import start_normal_traffic
 from .toolkit.port_scanner import threaded_port_scan
 from .toolkit.ip_reputation_checker import ip_check
 from .toolkit.utils import is_valid_target
@@ -41,6 +45,35 @@ def lab(request):
 
 def blog(request):
     return render(request, 'core/blog.html')
+
+
+
+def normal_worker(session_key):
+    start_normal_traffic(session_key)
+
+def dos_worker(session_key):
+    time.sleep(60)
+    start_dos_simulation(session_key)
+
+
+def dos_simulation(request):
+    if not request.session.session_key:
+        request.session.create()
+    session_key = request.session.session_key
+
+    threading.Thread(
+        target=normal_worker,
+        args=(session_key,),
+        daemon=True
+    ).start()
+
+    threading.Thread(
+        target=dos_worker,
+        args=(session_key,),
+        daemon=True
+    ).start()
+
+    return JsonResponse({"status": "ok", "message": "Simulation started"})
 
 
 def port_scanner(request):

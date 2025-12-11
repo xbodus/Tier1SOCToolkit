@@ -7,47 +7,31 @@ import {
 
 
 
-export type StatusInstance = {
-    200: number,
-    302: number,
-    401: number,
-    403: number,
-    404: number,
-    500: number,
-}
+export type StatusInstance = Record<number, number>
 
 export type IPInstance = Record<string, number>
-
-export type TimelineInstance = {
-    timestamp: number,
-    logged: boolean
-}
 
 export type EventInstance = {
     timestamp: number,
     count: number
 }
 
-
-export type SessionInstance = {
-    start_time: string
-}
-
 type LogsContextType = {
-    logs: object[];
-    timeline: TimelineInstance[];
+    logs: string[];
+    timeline: number[];
     statusCodes: StatusInstance;
     logEvents: EventInstance[]
-    ips: IPInstance;
+    topIps: IPInstance;
     alert: {detected: boolean, type: string|null};
-    addLog: (log: object, alert: { detected: boolean; alert_type: string | null }) => void;
+    flaggedLogs: object[];
+    addLog: (log: object, alert: { detected: boolean; alert_type: string | null; details: object }) => void;
 }
 
 const LogsContext = createContext<LogsContextType|null>(null)
 
 
 export function LogsProvider({children}:{children: any}) {
-    const [logs, setLogs] = useState<object[]>([])
+    const [logs, setLogs] = useState<string[]>([])
     const [statusCodes, setStatusCodes] = useState<StatusInstance>({
         200: 0,
         302: 0,
@@ -57,29 +41,31 @@ export function LogsProvider({children}:{children: any}) {
         500: 0
     })
     const [ips, setIps] = useState<IPInstance>({})
-    const [timeline, setTimeline] = useState<TimelineInstance[]>([])
+    const [topIps, setTopIps] = useState<IPInstance>({})
+    const [timeline, setTimeline] = useState<number>(0)
+    const [prevTime, setPrevTime] = useState<number|null>(null)
     const [logEvents, setLogEvents] = useState<EventInstance[]>([])
     const [alert, setAlert] = useState<{detected: boolean, type: string|null}>({detected: false, type: null})
+    const [flaggedLogs, setFlaggedLogs] = useState<object[]>([])
 
-    const addLog = (log: object, monitor_alert: {detected: boolean, alert_type: string|null}) => {
-        setLogs(prev => [...prev, log])
+    const addLog = (log: object, monitor_alert: {detected: boolean, alert_type: string|null, details: object}) => {
+        setLogs(prev => [...prev, log.event.original])
         getStatusCodes(log)
         getTopIp(log)
-        getTimeline(log)
+        getTimeline()
 
         if (monitor_alert.detected) {
             setAlert({detected: monitor_alert.detected, type: monitor_alert.alert_type || null})
+            setFlaggedLogs(prev => [...prev, monitor_alert.details])
         }
     }
 
-    const getTimeline = (log:object)=> {
-        const timestamp = new Date(log.event.created).getTime()
-        const logged = false
+    const getTimeline = ()=> {
+        setTimeline(prev => prev + 1)
 
-        setTimeline(prev => [...prev, {timestamp: timestamp, logged: logged}])
     }
 
-    const getStatusCodes = (log:object) => {
+    const getStatusCodes = (log:{ http: { response: {status_code: number} } }) => {
         const code = log.http.response.status_code
 
         setStatusCodes(prev => ({
@@ -88,48 +74,55 @@ export function LogsProvider({children}:{children: any}) {
         }))
     }
 
-    const getTopIp = (log:object) => {
+    const getTopIp = (log:{ source: { ip: string } }) => {
         const ip = log.source.ip
-        setIps(prev => {
-            const updated:IPInstance = {
-                ...prev,
-                [ip]: (prev[ip] ?? 0) + 1
-            }
-            const sorted_ips = Object.entries(updated).sort(([, a], [, b]) => b - a)
-            const topFive = sorted_ips.slice(0, 5)
 
-            return Object.fromEntries(topFive)
+        setIps(prevIps => {
+            const updatedIps = {
+              ...prevIps,
+              [ip]: (prevIps[ip] ?? 0) + 1
+            }
+
+            const sorted = Object.entries(updatedIps)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 5)
+
+            setTopIps(Object.fromEntries(sorted))
+
+            return updatedIps
         })
     }
 
     useEffect(() => {
         const interval = setInterval(() => {
             setTimeline(prevTimeline => {
-                // Find unlogged events
-                const unlogged = prevTimeline.filter(item => !item.logged);
+                const baseTime = prevTime ?? new Date().getTime()
 
-                const updatedTimeline = prevTimeline.map(item =>
-                     item.logged ? item : { ...item, logged: true }
-                )
+                setLogEvents((prev) => {
+                    const updated = [
+                        ...prev,
+                        {
+                            timestamp: baseTime,
+                            count: prevTimeline
+                        }
+                    ]
 
-                // Add new bucket count
-                setLogEvents(prev => [
-                    ...prev,
-                    {
-                        timestamp: Date.now(),
-                        count: unlogged.length
-                    }
-                ])
+                    const timeFilter = baseTime - 6 * 60 * 1000
+                    return updated.filter(x => x["timestamp"] > timeFilter)
+                })
 
-                return updatedTimeline
+                setPrevTime(baseTime)
+
+                return 0
             })
         }, 5000)
 
         return () => clearInterval(interval)
     }, [])
 
+
     return (
-        <LogsContext.Provider value={{ logs, statusCodes, timeline, logEvents, ips, alert, addLog }}>
+        <LogsContext.Provider value={{ logs, statusCodes, timeline, logEvents, topIps, alert, flaggedLogs, addLog }}>
           {children}
         </LogsContext.Provider>
     )
