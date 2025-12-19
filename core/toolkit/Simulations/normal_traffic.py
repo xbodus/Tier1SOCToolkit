@@ -32,7 +32,7 @@ USERS = [
         "password": "PositiveLuck404@"
     }]
 
-BASE_URL = "https://futurebank.local"
+BASE_URL = "https://localhost"
 
 ENDPOINTS = ["/", "/signup", "/login", "/dashboard"]
 
@@ -54,8 +54,7 @@ async def start_traffic(session_key):
             url = BASE_URL + endpoint
 
             headers = {
-                "X-Spoof": "1",
-                "X-Spoof-IP": user["ip"],
+                "X-Spoofed-IP": user["ip"],
                 "User-Agent": "Mozilla/5.0",
                 "Referer": url,
             }

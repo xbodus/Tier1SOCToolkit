@@ -374,9 +374,9 @@ def log_monitor(log: Dict[str, Any], session_id: Optional[str] = None) -> Dict[s
       }
     """
     # Extract fields safely
-    ip = log.get("source", {}).get("ip")
-    status_code = log.get("http", {}).get("response", {}).get("status_code")
-    path_original = log.get("url", {}).get("original") or log.get("url", {}).get("path") or ""
+    ip = log.get("client_ip")
+    status_code = log.get("status_code")
+    path_original = log.get("endpoint")
     # If you stored raw query separately, pass it; otherwise split it here:
     parsed = urlparse(path_original)
     path_only = parsed.path or ""

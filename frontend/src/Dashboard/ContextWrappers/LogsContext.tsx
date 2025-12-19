@@ -7,6 +7,25 @@ import {
 
 
 
+export type LogMessage = {
+    timestamp: string;
+    bytes_sent: number;
+    client_ip: string;
+    endpoint: string;
+    message: string;
+    method: string;
+    referrer: string;
+    request_time: number;
+    status_code: number;
+    user_agent: string;
+}
+
+export type AlertMessage = {
+    detected: boolean;
+    alert_type: string|null;
+    details: object
+}
+
 export type StatusInstance = Record<number, number>
 
 export type IPInstance = Record<string, number>
@@ -17,14 +36,15 @@ export type EventInstance = {
 }
 
 type LogsContextType = {
+    ips: IPInstance;
     logs: string[];
-    timeline: number[];
+    timeline: number;
     statusCodes: StatusInstance;
     logEvents: EventInstance[]
     topIps: IPInstance;
     alert: {detected: boolean, type: string|null};
     flaggedLogs: object[];
-    addLog: (log: object, alert: { detected: boolean; alert_type: string | null; details: object }) => void;
+    addLog: (log: LogMessage, alert: AlertMessage) => void;
 }
 
 const LogsContext = createContext<LogsContextType|null>(null)
@@ -48,8 +68,8 @@ export function LogsProvider({children}:{children: any}) {
     const [alert, setAlert] = useState<{detected: boolean, type: string|null}>({detected: false, type: null})
     const [flaggedLogs, setFlaggedLogs] = useState<object[]>([])
 
-    const addLog = (log: object, monitor_alert: {detected: boolean, alert_type: string|null, details: object}) => {
-        setLogs(prev => [...prev, log.event.original])
+    const addLog = (log: LogMessage, monitor_alert: AlertMessage) => {
+        setLogs(prev => [...prev, log.message])
         getStatusCodes(log)
         getTopIp(log)
         getTimeline()
@@ -62,20 +82,18 @@ export function LogsProvider({children}:{children: any}) {
 
     const getTimeline = ()=> {
         setTimeline(prev => prev + 1)
-
     }
 
-    const getStatusCodes = (log:{ http: { response: {status_code: number} } }) => {
-        const code = log.http.response.status_code
-
+    const getStatusCodes = (log:LogMessage) => {
+        const code = log.status_code
         setStatusCodes(prev => ({
             ...prev,
             [code]: (prev[code] ?? 0) + 1
         }))
     }
 
-    const getTopIp = (log:{ source: { ip: string } }) => {
-        const ip = log.source.ip
+    const getTopIp = (log:LogMessage) => {
+        const ip = log.client_ip
 
         setIps(prevIps => {
             const updatedIps = {
@@ -122,7 +140,7 @@ export function LogsProvider({children}:{children: any}) {
 
 
     return (
-        <LogsContext.Provider value={{ logs, statusCodes, timeline, logEvents, topIps, alert, flaggedLogs, addLog }}>
+        <LogsContext.Provider value={{ ips, logs, statusCodes, timeline, logEvents, topIps, alert, flaggedLogs, addLog }}>
           {children}
         </LogsContext.Provider>
     )

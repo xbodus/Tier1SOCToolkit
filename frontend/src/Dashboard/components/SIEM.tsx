@@ -1,5 +1,5 @@
 import {useState, useEffect, useRef} from "react";
-import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
+import {type AlertMessage, type LogMessage, useLogsContext} from "../ContextWrappers/LogsContext.tsx";
 
 
 export default function SIEM() {
@@ -41,11 +41,11 @@ export default function SIEM() {
         }
 
         socket.current.onmessage = (event) => {
-            const data = JSON.parse(event.data)
-            const message = data.message
-            const alert: {detected: boolean, alert_type: string|null, details: object} = data.alert
+            const data:{message: LogMessage, alert: AlertMessage} = JSON.parse(event.data)
+            const message:LogMessage = data.message
+            const alert:AlertMessage = data.alert
             addLog(message, alert)
-            console.log(data)
+            console.log(message)
         }
 
         socket.current.onclose = () => {
