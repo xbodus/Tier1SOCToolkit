@@ -2,12 +2,11 @@ import asyncio
 import aiohttp
 from django.core.cache import cache
 
-URL = "https://futurebank.local"
+URL = "https://localhost"
 SPOOF_IP = "123.12.60.101"
 
 HEADERS = {
-              "X-Spoof": "1",
-              "X-Spoof-IP": SPOOF_IP,
+              "X-Spoofed-IP": SPOOF_IP,
               "User-Agent": "Mozilla/5.0",
               "Referer": URL,
           }

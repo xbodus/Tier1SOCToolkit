@@ -30,11 +30,14 @@ from .toolkit.Workers.tasks import start_es_worker
 load_dotenv()
 
 es = Elasticsearch(
-    ["https://elasticsearch:9200"],
+    ["https://localhost:9200"],
     verify_certs=True,
+    ssl_assert_hostname=False,
+    ssl_show_warn=False,
     ca_certs=os.getenv("CERT_PATH"),
     basic_auth=("elastic", os.getenv("ES_PASSWORD"))
 )
+
 
 def home(request):
     return render(request, 'core/home.html')

@@ -1,4 +1,5 @@
-import time
+import os
+from dotenv import load_dotenv
 import threading
 from datetime import datetime, timezone
 
@@ -9,16 +10,18 @@ from elasticsearch import Elasticsearch
 
 from core.toolkit.log_monitor import log_monitor
 
-# Path to your PEM file
-cert_path = r"C:\Users\Titian-OmegaVI\PycharmProjects\SOCTeir1Toolkit-CapstoneProject\elk\certs\elastic-certificates.pem"
+load_dotenv()
 
 # Initialize the client
 es = Elasticsearch(
-    ["https://elasticsearch:9200"],
+    ["https://localhost:9200"],
     verify_certs=True,
-    ca_certs=cert_path,
-    basic_auth=("elastic", "Gan5Q2++ncK-6FCTRjsx")
+    ssl_assert_hostname=False,
+    ssl_show_warn=False,
+    ca_certs=os.getenv("CERT_PATH"),
+    basic_auth=("elastic", os.getenv("ES_PASSWORD"))
 )
+
 
 channel_layer = get_channel_layer()
 
@@ -34,7 +37,7 @@ def start_es_worker(message, session_key):
 
 def send_user_log(message, session_key):
     stop_key = f"stop_logs_{session_key}"
-    index = "filebeat-*"
+    index = "nginx-logs-*"
     last_timestamp = datetime.now(timezone.utc).isoformat()
 
 
@@ -51,7 +54,19 @@ def send_user_log(message, session_key):
                     "range": {
                         "@timestamp": {"gt": last_timestamp}
                 }
-            }
+            },
+            "_source": [
+                "message",
+                "client_ip",
+                "method",
+                "endpoint",
+                "status_code",
+                "bytes_sent",
+                "referrer",
+                "user_agent",
+                "request_time",
+                "@timestamp"
+            ]
         }
 
         try:
@@ -61,7 +76,6 @@ def send_user_log(message, session_key):
             continue
 
         hits = results.get("hits", {}).get("hits", [])
-
         for hit in hits:
             source = hit["_source"]
             ts = source["@timestamp"]
