@@ -11,5 +11,6 @@ urlpatterns = [
     path('api/logs/ingest', views.log_ingestion, name="log_ingest"),
     path('api/start-logs', views.request_logs, name="request_logs"),
     path("api/download-logs/", views.download_logs, name="download_logs"),
-    path("api/start-simulation-1", views.dos_simulation, name="dos_simulation")
+    path("api/start-simulation-1", views.dos_simulation, name="dos_simulation"),
+    path("api/start-simulation-2", views.brute_force_simulation, name="brute_force_simulation"),
 ]
