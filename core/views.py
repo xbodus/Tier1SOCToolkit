@@ -19,6 +19,7 @@ from django.views.decorators.http import require_GET
 
 from elasticsearch import Elasticsearch
 
+from .toolkit.Simulations.brute_force_sim import start_brute_force_simulation
 from .toolkit.Simulations.dos_sim import start_dos_simulation
 from .toolkit.Simulations.normal_traffic import start_normal_traffic
 from .toolkit.port_scanner import threaded_port_scan
@@ -46,10 +47,17 @@ def home(request):
 def lab(request):
     return render(request, 'core/soc_lab.html')
 
+
 def blog(request):
     return render(request, 'core/blog.html')
 
 
+def get_session_key(request):
+    if not request.session.session_key:
+        request.session.create()
+    session_key = request.session.session_key
+
+    return session_key
 
 def normal_worker(session_key):
     start_normal_traffic(session_key)
@@ -58,11 +66,8 @@ def dos_worker(session_key):
     time.sleep(60)
     start_dos_simulation(session_key)
 
-
 def dos_simulation(request):
-    if not request.session.session_key:
-        request.session.create()
-    session_key = request.session.session_key
+    session_key = get_session_key(request)
 
     threading.Thread(
         target=normal_worker,
@@ -76,7 +81,31 @@ def dos_simulation(request):
         daemon=True
     ).start()
 
-    return JsonResponse({"status": "ok", "message": "Simulation started"})
+    return JsonResponse({"status": "ok", "message": "Dos Simulation started"})
+
+
+
+def brute_force_worker(session_key):
+    time.sleep(60)
+    start_brute_force_simulation(session_key)
+
+def brute_force_simulation(request):
+    session_key = get_session_key(request)
+
+    threading.Thread(
+        target=normal_worker,
+        args=(session_key,),
+        daemon=True
+    ).start()
+
+    threading.Thread(
+        target=brute_force_worker,
+        args=(session_key,),
+        daemon=True
+    ).start()
+
+    return JsonResponse({"status": "ok", "message": "Brute Force Simulation started"})
+
 
 
 def port_scanner(request):
