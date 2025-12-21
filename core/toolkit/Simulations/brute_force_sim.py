@@ -53,6 +53,8 @@ def start_brute_force_simulation(session_key, pattern="medium"):
     stop_key = f"stop_logs_{session_key}"
     delay_func = attack_patterns.get(pattern, attack_patterns["medium"])
 
+    success = 0
+
     print("Starting brute force attack")
     for user in USERS:
         if cache.get(stop_key):
@@ -72,11 +74,14 @@ def start_brute_force_simulation(session_key, pattern="medium"):
 
             if r.status_code in (200, 302) and "dashboard" in r.url:
                 print(f"SUCCESS! {user}:{password}")
+                success += 1
                 break
 
             time.sleep(delay_func())
 
-    print("BRUTE FORCE ATTEMPT FAILED")
+    if success == 0:
+        print("BRUTE FORCE ATTEMPT FAILED")
+
     print("Stopped brute force attack")
 
 

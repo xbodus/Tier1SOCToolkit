@@ -13,4 +13,5 @@ urlpatterns = [
     path("api/download-logs/", views.download_logs, name="download_logs"),
     path("api/start-simulation-1", views.dos_simulation, name="dos_simulation"),
     path("api/start-simulation-2", views.brute_force_simulation, name="brute_force_simulation"),
+    path("api/start-simulation-3", views.sqli_simulation, name="sqli_simulation"),
 ]
