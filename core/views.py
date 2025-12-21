@@ -22,6 +22,7 @@ from elasticsearch import Elasticsearch
 from .toolkit.Simulations.brute_force_sim import start_brute_force_simulation
 from .toolkit.Simulations.dos_sim import start_dos_simulation
 from .toolkit.Simulations.normal_traffic import start_normal_traffic
+from .toolkit.Simulations.sqli_sim import start_sqli_simulation
 from .toolkit.port_scanner import threaded_port_scan
 from .toolkit.ip_reputation_checker import ip_check
 from .toolkit.utils import is_valid_target
@@ -105,6 +106,29 @@ def brute_force_simulation(request):
     ).start()
 
     return JsonResponse({"status": "ok", "message": "Brute Force Simulation started"})
+
+
+
+def sqli_worker(session_key):
+    time.sleep(60)
+    start_sqli_simulation(session_key)
+
+def sqli_simulation(request):
+    session_key = get_session_key(request)
+
+    threading.Thread(
+        target=normal_worker,
+        args=(session_key,),
+        daemon=True
+    ).start()
+
+    threading.Thread(
+        target=sqli_worker,
+        args=(session_key,),
+        daemon=True
+    ).start()
+
+    return JsonResponse({"status": "ok", "message": "SQLi Simulation started"})
 
 
 
