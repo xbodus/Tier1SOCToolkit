@@ -3,7 +3,6 @@ import threading
 import time
 import os
 from dotenv import load_dotenv
-from concurrent.futures import ThreadPoolExecutor
 
 from django.core.cache import cache
 from django.shortcuts import render
@@ -177,26 +176,30 @@ def port_scanner(request):
 
 def ip_reputation(request):
     if request.method == "POST":
-        body = json.loads(request.body)
-        ip = body.get("ip")
-        enrich = body.get("enrichData")
-
         try:
-            is_valid_target(ip)
-        except (ipaddress.AddressValueError, OSError) as e:
-            return JsonResponse({"error": str(e)})
+            if "ip" in request.POST:
+                ip = request.POST.get("ip")
+                enrich = False
 
-        try:
-            results = ip_check(ip, enrich)
+                try:
+                    is_valid_target(ip)
+                except (ipaddress.AddressValueError, OSError) as e:
+                    return JsonResponse({"error": str(e)})
+
+                try:
+                    results = ip_check(ip, enrich)
+                except Exception as e:
+                    return JsonResponse({"error": str(e)})
+
+                context = {
+                    "ip": ip,
+                    "results": results
+                }
+
+                return JsonResponse(context)
         except Exception as e:
             return JsonResponse({"error": str(e)})
 
-        context = {
-            "ip": ip,
-            "results": results
-        }
-
-        return JsonResponse(context)
     return None
 
 
@@ -209,16 +212,28 @@ def download_logs(request):
         return HttpResponseBadRequest("Missing start or end time")
 
     resp = es.search(
-        index="filebeat-*",
+        index="nginx-logs-*",
         body={"query": {
                 "range": {
                     "@timestamp": {
                         "gte": start,
                         "lte": end
+                        }
                     }
-                }
-            }
-        },
+                },
+                "_source": [
+                    "message",
+                    "client_ip",
+                    "method",
+                    "endpoint",
+                    "status_code",
+                    "bytes_sent",
+                    "referrer",
+                    "user_agent",
+                    "request_time",
+                    "@timestamp"
+                ]
+            },
         scroll="2m",
         size=1000,
     )
@@ -264,16 +279,22 @@ def log_analyzer(request):
                 data = analyze_log(file, alert_type)
                 elapsed = start_time - datetime.now()
 
-                # context = {
-                #     "results" : data,
-                #     "total": len(data) if data else None,
-                #     "elapsed": elapsed,
-                # }
-                #
-                # return JsonResponse(context)
-                return JsonResponse({"results" : "File came through"})
+                if data:
+                    context = {
+                        "results" : data,
+                        "total": len(data),
+                        "elapsed": elapsed,
+                    }
+                    return JsonResponse(context, status=200)
+                else:
+                    context = {
+                        "results": "No confirmed suspicious data",
+                        "total": 0,
+                        "elapsed": elapsed,
+                    }
+                    return JsonResponse(context, status=200)
         except Exception as e:
-            return JsonResponse({"error": str(e)})
+            return JsonResponse({"error": str(e)}, status=500)
 
     return None
 

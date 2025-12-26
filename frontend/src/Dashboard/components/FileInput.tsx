@@ -1,23 +1,27 @@
-import React, {type FormEvent, useEffect, useState} from "react";
+import React, {type FormEvent, useState} from "react";
 import {getCookie} from "../Utils/utils.tsx";
 import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
+import type {BruteForceInstance, DoSInstance, SQLiInstance} from "./AnalyzerContent.tsx";
 
 
-export default function FileInput() {
-    const [file, setFile] = useState<File|null>(null)
-    const [isLoading, setIsLoading] = useState<boolean>(false)
-    const [data, setData] = useState(null)
+interface FileInputProps {
+    setLoading: (loading: boolean) => void;
+    setData: (newData: DoSInstance | BruteForceInstance | SQLiInstance) => void;
+}
+
+export default function FileInput({setLoading, setData}: FileInputProps) {
+    const [file, setFile] = useState<File | null>(null)
     const {alert} = useLogsContext()
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-          setFile(e.target.files[0])
+            setFile(e.target.files[0])
         }
     }
 
-    const handleSubmit = async (e:FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        setIsLoading(true)
+        setLoading(true)
 
         if (!file) return
 
@@ -34,29 +38,19 @@ export default function FileInput() {
         })
 
         const data = await response.json()
-
         setData(data)
 
-        return setIsLoading(false)
+        return setLoading(false)
     }
 
-    useEffect(() => {
-        console.log(data)
-    }, [data])
-
     return (
-        <>
-            {!isLoading && (
-                <>
-                    <p style={{ color: "#39ff14" }}>Upload log file to analyze: </p>
-                    <form onSubmit={(e) => handleSubmit(e)}>
-                        <input name={"file"} type={"file"} placeholder={"Input Log"} onChange={(e) => handleFileChange(e)} />
-                        <button type={"submit"}>Analyze</button>
-                    </form>
-                </>
-            )}
-            {isLoading && (<p style={{ color: "#39ff14" }}>Loading...</p> )}
-            {!isLoading && data && (<p style={{ color: "#39ff14" }}>Data found</p>)}
-        </>
+        <div className={"flex gap-30 align-center m-center"}>
+            <p style={{color: "#39ff14"}}>Upload log file to analyze: </p>
+            <form onSubmit={(e) => handleSubmit(e)}>
+                <input className="custom-file-input" name={"file"} type={"file"}
+                       onChange={(e) => handleFileChange(e)}/>
+                <button className="siem-button" type={"submit"}>Analyze</button>
+            </form>
+        </div>
     )
 }

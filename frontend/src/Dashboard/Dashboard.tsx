@@ -35,7 +35,7 @@ export default function Dashboard() {
         <>
             {!simulation &&  (<Simulations handleSim={handleSimulation} />)}
             {simulation && (
-            <section id='react-dashboard' className='fullscreen'>
+            <section id='react-dashboard' style={{ height: "100%", width: "100%"}}>
                 <h1 className="siem-lab-label">Rouge Operations Security Center</h1>
                 <section className="siem-lab-content">
                     <Suspense fallback={<p>Loading…</p>}>

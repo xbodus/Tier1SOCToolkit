@@ -45,7 +45,6 @@ export default function SIEM() {
             const message:LogMessage = data.message
             const alert:AlertMessage = data.alert
             addLog(message, alert)
-            console.log(message)
         }
 
         socket.current.onclose = () => {

@@ -154,15 +154,26 @@ DJANGO_VITE_DEV_SERVER = "http://localhost:5173"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
+# CSRF Settings
+# Development settings
+if DEBUG:
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SAMESITE = 'Lax'
+else:
+    # Production settings
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = 'None'
 
+# Always allow JavaScript to read CSRF token
+CSRF_COOKIE_HTTPONLY = False
 
 #Elasticsearch
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'https://elasticsearch:9200',
-        'http_auth': ('elastic', 'Gan5Q2++ncK-6FCTRjsx'),
+        'hosts': 'https://localhost:9200',
+        'http_auth': ('elastic', env('ES_PASSWORD')),
         'verify_certs': True,
         'ca_certs': f"{BASE_DIR}/elk/certs/elastic-stack-ca.pem"
     },

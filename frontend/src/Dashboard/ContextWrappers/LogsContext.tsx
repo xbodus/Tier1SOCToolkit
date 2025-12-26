@@ -138,7 +138,6 @@ export function LogsProvider({children}:{children: any}) {
         return () => clearInterval(interval)
     }, [])
 
-
     return (
         <LogsContext.Provider value={{ ips, logs, statusCodes, timeline, logEvents, topIps, alert, flaggedLogs, addLog }}>
           {children}
