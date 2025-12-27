@@ -1,7 +1,7 @@
 import {
-    createContext,
+    createContext, useCallback,
     useContext,
-    useEffect,
+    useEffect, useMemo,
     useState
 } from "react";
 
@@ -47,7 +47,13 @@ type LogsContextType = {
     addLog: (log: LogMessage, alert: AlertMessage) => void;
 }
 
+type LogActionsContextType = {
+    handleReset: () => void;
+}
+
 const LogsContext = createContext<LogsContextType|null>(null)
+
+const LogActionsContext = createContext<LogActionsContextType|null>(null)
 
 
 export function LogsProvider({children}:{children: any}) {
@@ -68,31 +74,20 @@ export function LogsProvider({children}:{children: any}) {
     const [alert, setAlert] = useState<{detected: boolean, type: string|null}>({detected: false, type: null})
     const [flaggedLogs, setFlaggedLogs] = useState<object[]>([])
 
-    const addLog = (log: LogMessage, monitor_alert: AlertMessage) => {
-        setLogs(prev => [...prev, log.message])
-        getStatusCodes(log)
-        getTopIp(log)
-        getTimeline()
 
-        if (monitor_alert.detected) {
-            setAlert({detected: monitor_alert.detected, type: monitor_alert.alert_type || null})
-            setFlaggedLogs(prev => [...prev, monitor_alert.details])
-        }
-    }
-
-    const getTimeline = ()=> {
+    const getTimeline = useCallback(()=> {
         setTimeline(prev => prev + 1)
-    }
+    }, [])
 
-    const getStatusCodes = (log:LogMessage) => {
+    const getStatusCodes = useCallback((log:LogMessage) => {
         const code = log.status_code
         setStatusCodes(prev => ({
             ...prev,
             [code]: (prev[code] ?? 0) + 1
         }))
-    }
+    }, [])
 
-    const getTopIp = (log:LogMessage) => {
+    const getTopIp = useCallback((log:LogMessage) => {
         const ip = log.client_ip
 
         setIps(prevIps => {
@@ -109,7 +104,38 @@ export function LogsProvider({children}:{children: any}) {
 
             return updatedIps
         })
-    }
+    }, [])
+
+    const addLog = useCallback((log: LogMessage, monitor_alert: AlertMessage) => {
+        setLogs(prev => [...prev, log.message])
+        getStatusCodes(log)
+        getTopIp(log)
+        getTimeline()
+
+        if (monitor_alert.detected) {
+            setAlert({detected: monitor_alert.detected, type: monitor_alert.alert_type || null})
+            setFlaggedLogs(prev => [...prev, monitor_alert.details])
+        }
+    }, [getStatusCodes, getTopIp, getTimeline])
+
+    const handleReset = useCallback(() => {
+        setLogs([])
+        setStatusCodes({
+            200: 0,
+            302: 0,
+            401: 0,
+            403: 0,
+            404: 0,
+            500: 0
+        })
+        setIps({})
+        setTopIps({})
+        setTimeline(0)
+        setPrevTime(null)
+        setLogEvents([])
+        setAlert({detected: false, type: null})
+        setFlaggedLogs([])
+    }, [])
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -138,9 +164,28 @@ export function LogsProvider({children}:{children: any}) {
         return () => clearInterval(interval)
     }, [])
 
+    const contextValue = useMemo(() => ({
+        ips,
+        logs,
+        statusCodes,
+        timeline,
+        logEvents,
+        topIps,
+        alert,
+        flaggedLogs,
+        addLog,
+    }), [ips, logs, statusCodes, timeline, logEvents, topIps, alert, flaggedLogs, addLog])
+
+
+    const logActionsValue = useMemo(() => ({
+        handleReset
+    }), [handleReset])
+
     return (
-        <LogsContext.Provider value={{ ips, logs, statusCodes, timeline, logEvents, topIps, alert, flaggedLogs, addLog }}>
-          {children}
+        <LogsContext.Provider value={contextValue}>
+            <LogActionsContext.Provider value={logActionsValue}>
+                {children}
+            </LogActionsContext.Provider>
         </LogsContext.Provider>
     )
 }
@@ -148,4 +193,10 @@ export function LogsProvider({children}:{children: any}) {
 // eslint-disable-next-line react-refresh/only-export-components
 export function useLogsContext() {
   return useContext(LogsContext)!
+}
+
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useLogActionsContext() {
+    return useContext(LogActionsContext)!
 }

@@ -3,21 +3,19 @@ import '@vitejs/plugin-react/preamble'
 import React, {useState, Suspense, type ReactNode} from "react"
 
 import Simulations from "./components/SimControls.tsx"
+import {useLogActionsContext} from "./ContextWrappers/LogsContext.tsx";
 
 
 
 export default function Dashboard() {
+    const {handleReset} = useLogActionsContext()
     const [content, setContent] = useState<number>(1)
     const [simulation, setSimulation] = useState<number|null>(null)
     const [startTime, setStartTime] = useState<string|null>(null)
 
     const SIEMContent = React.lazy(() => import("./components/SIEMContent"));
     const AnalyzerContent = React.lazy(() => import("./components/AnalyzerContent"));
-
-    const VIEWS: { [key: number]: ReactNode } = {
-        1: <SIEMContent start={startTime} />,
-        2: <AnalyzerContent />
-    }
+    const ReportContent = React.lazy(() => import("./components/SimReport"));
 
     const handleSimulation = (number:number) => {
         const simulationMapping: Record<number, string> = {
@@ -29,6 +27,12 @@ export default function Dashboard() {
             .then(r => console.log(r))
         setStartTime(new Date().toISOString())
         setSimulation(number)
+    }
+
+    const VIEWS: { [key: number]: ReactNode } = {
+        1: <SIEMContent start={startTime} />,
+        2: <AnalyzerContent />,
+        4: <ReportContent />
     }
 
     return (
@@ -48,6 +52,8 @@ export default function Dashboard() {
                         <button className={`siem-lab-control ${content === 1 ? "active" : ""}`} onClick={() => setContent(1)}>SIEM</button>
                         <button className={`siem-lab-control ${content === 2 ? "active" : ""}`} onClick={() => setContent(2)}>Analyze</button>
                     </div>
+                    <button className="siem-lab-exit" onClick={() => setContent(4)}>Begin Report</button>
+                    <a href={"/lab"}><button className="siem-lab-exit" onClick={() => handleReset()}>Select Simulation</button></a>
                     <a href="/"><button className="siem-lab-exit">Leave Lab</button></a>
                 </section>
             </section>

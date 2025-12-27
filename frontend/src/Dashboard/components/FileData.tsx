@@ -1,5 +1,7 @@
 import type {BruteForceInstance, DoSInstance, SQLiInstance} from "./AnalyzerContent.tsx";
 import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
+import {useState} from "react";
+import {formatDuration} from "../Utils/utils.tsx";
 
 
 interface DataProps {
@@ -8,27 +10,107 @@ interface DataProps {
 
 export default function FileData({data}: DataProps) {
     const {alert} = useLogsContext()
+    const [currentPage, setCurrentPage] = useState<number>(1)
+    const logsPerPage:number = 15
 
     if (alert.type === "dos") {
         const dosData = data as DoSInstance
+        const totalPages:number = Math.ceil(dosData.results.related_logs.length / logsPerPage)
+        const startIndex:number = (currentPage - 1) * logsPerPage
+        const endIndex:number = startIndex + logsPerPage
+        const currentLogs = dosData.results.related_logs.slice(startIndex, endIndex)
+
+        const goToFirst = () => setCurrentPage(1)
+        const goToLast = () => setCurrentPage(totalPages)
+        const goToNext = () => setCurrentPage(prev => Math.min(prev + 1, totalPages))
+        const goToPrev = () => setCurrentPage(prev => Math.max(prev - 1, 1))
+        const goToPage = (page:number) => setCurrentPage(page)
+
+        const getPageNumbers = () => {
+            const pages = []
+            const showRange = 2
+
+            pages.push(1)
+
+            if (currentPage > showRange + 2) {
+                pages.push("...")
+            }
+
+            for (let i = Math.max(2, currentPage - showRange);
+                 i <= Math.min(totalPages - 1, currentPage + showRange);
+                 i++) {
+                pages.push(i)
+            }
+
+            if (currentPage < totalPages - showRange - 1) {
+                pages.push("...")
+            }
+
+            if (totalPages > 1) {
+                pages.push(totalPages)
+            }
+
+            return pages
+        }
+
+        const pageNumbers = getPageNumbers()
+
         return (
-            <div className={"log-window overflow-y"}>
-                <p style={{ color: "#39ff14" }}>{JSON.stringify(dosData.results.alerts)}</p>
-                <p style={{ color: "#39ff14" }}>{JSON.stringify(dosData.results.tracked_logs)}</p>
-                <p style={{ color: "#39ff14" }}>{JSON.stringify(dosData.total)}</p>
-                <p style={{ color: "#39ff14" }}>{JSON.stringify(dosData.elapsed)}</p>
+            <div className={"analyzer-tool-window overflow-y"}>
+                <p style={{ color: "#39ff14" }} className={"pb-3 log-item"}>Suspected DoS Attack from {dosData.results.ip}</p>
+                <p style={{ color: "#39ff14" }}>Total Flagged Logs: {dosData.results.related_logs.length}</p>
+                <p style={{ color: "#39ff14" }} className={"pb-3 log-item"}>Attack Duration: {formatDuration(dosData.results.time_elapsed)}</p>
+                {currentLogs.map((event, index) => (
+                    <div key={index} className={"pb-3 log-item"}>
+                        <p style={{ color: "#39ff14" }}>{event.timestamp}</p>
+                        <p style={{ color: "#39ff14" }}>{event.message}</p>
+                    </div>
+                ))}
+                <div className={"flex gap-30 justify-center"}>
+                    <p style={{ color: "#39ff14", cursor: "pointer" }} onClick={() => goToFirst()}>≤≤</p>
+                    <p style={{ color: "#39ff14", cursor: "pointer" }} onClick={() => goToPrev()}>≤</p>
+                    {pageNumbers.map((page, index) => {
+                        if (typeof page === "number") {
+                            return (
+                                <p
+                                    key={index}
+                                    style={{
+                                        color: "#39ff14",
+                                        textDecoration: page === currentPage ? "underline" : "none",
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => goToPage(page)}
+                                >
+                                    {page}
+                                </p>
+                            )
+                        }
+                        return (
+                            <p key={index} style={{ color: "#39ff14" }}>{page}</p>
+                        )
+                    })}
+                    <p style={{ color: "#39ff14", cursor: "pointer" }} onClick={() => goToNext()}>≥</p>
+                    <p style={{ color: "#39ff14", cursor: "pointer" }} onClick={() => goToLast()}>≥≥</p>
+                </div>
+                <p style={{ color: "#39ff14" }}>Total Analysis Time: {formatDuration(dosData.elapsed)}</p>
             </div>
         )
     }
 
     if (alert.type === "brute-force") {
         const bruteForceData = data as BruteForceInstance
+        const logData: {total: number, messages: string[]} = Object.entries(bruteForceData.results.tracked_logs)[0][1]
+
         return (
-            <div className={"log-window overflow-y"}>
-                <p style={{ color: "#39ff14" }}>{JSON.stringify(bruteForceData.results.tracked_logs)}</p>
-                <p style={{ color: "#39ff14" }}>{JSON.stringify(bruteForceData.results.alerts)}</p>
-                <p style={{ color: "#39ff14" }}>{bruteForceData.total}</p>
-                <p style={{ color: "#39ff14" }}>{bruteForceData.elapsed}</p>
+            <div className={"analyzer-tool-window overflow-y"}>
+                <p style={{ color: "#39ff14" }} className={"pb-3 log-item"}>Alert: {bruteForceData.results.alerts[0]}</p>
+                <div className={"pb-3 log-item"}>
+                    <p style={{ color: "#39ff14" }}>{logData.total} Related Logs:</p>
+                    {logData.messages.map((log, index) => (
+                        <p key={index} style={{ color: "#39ff14" }}>{log}</p>
+                    ))}
+                </div>
+                <p style={{ color: "#39ff14" }}>Total Analysis: {formatDuration(bruteForceData.elapsed)}</p>
             </div>
         )
     }
@@ -47,7 +129,7 @@ export default function FileData({data}: DataProps) {
                         </div>
                     )
                 })}
-                <p style={{ color: "#39ff14" }}>Total Time to Analyze: {sqliData.elapsed}</p>
+                <p style={{ color: "#39ff14" }}>Total Analysis Time: {formatDuration(sqliData.elapsed)}</p>
             </div>
         )
     }
