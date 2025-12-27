@@ -226,22 +226,91 @@ body, html {
 }
 
 /* Analyzer Styling */
+.form {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    border-radius: 5px;
+    border: 2px solid #39ff14;
+    padding: .5rem;
+    margin: .5rem 0;
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
+    inset 0 0 5px rgba(57, 255, 20, 0.5);
+}
 
 .custom-file-input::-webkit-file-upload-button {
     background-color: transparent;
     color: #39ff14;
-    font-family: "Doto", monospace;font-weight: bold;
-
+    font-family: "Doto", monospace;
+    font-weight: bold;
     border-radius: 20px;
     border: 2px solid #39ff14;
     padding: .35rem .5rem;
     margin-right: .5rem;
     box-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+    cursor: pointer;
 }
-
 
 input[type="file"] {
     color: #39ff14;
+    font-family: "Doto", monospace;
+    font-weight: bold;
+}
+
+.custom-input {
+    background-color: transparent;
+    color: #39ff14;
+    font-family: "Doto", monospace;
+    font-weight: bold;
+    border-radius: 30px;
+    border: 2px solid #39ff14;
+    padding: .35rem .5rem;
+    margin-right: 2rem;
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+}
+
+.custom-input::-webkit-input-placeholder {
+    color: #39ff14;
+    font-family: "Doto", monospace;
+    font-weight: bold;
+}
+
+.custom-input:focus {
+    outline: none;
+    box-shadow: 0 0 6px rgba(57, 255, 20, 0.7);
+}
+
+
+/* Hide the default checkbox */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #39ff14;
+  background-color: transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  vertical-align: middle;
+}
+
+/* Checked state */
+input[type="checkbox"]:checked {
+  background-color: #39ff14;
+  box-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+}
+
+/* Checkmark */
+input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  color: #0a0a0a;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .siem-button {
@@ -253,6 +322,7 @@ input[type="file"] {
     border: 2px solid #39ff14;
     padding: .35rem .5rem;
     box-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+    cursor: pointer;
 }
 
 .analyzer-window {

@@ -69,6 +69,12 @@ def dos_worker(session_key):
 def dos_simulation(request):
     session_key = get_session_key(request)
 
+    stop_key = f"stop_logs_{session_key}"
+    print(cache.get(stop_key))
+    while cache.get(stop_key):
+        print("Waiting to start traffic")
+        time.sleep(1)
+
     threading.Thread(
         target=normal_worker,
         args=(session_key,),
@@ -177,9 +183,9 @@ def port_scanner(request):
 def ip_reputation(request):
     if request.method == "POST":
         try:
-            if "ip" in request.POST:
+            if "ip" in request.POST and "enrich" in request.POST:
                 ip = request.POST.get("ip")
-                enrich = False
+                enrich = True if request.POST.get("enrich") == "true" else False
 
                 try:
                     is_valid_target(ip)

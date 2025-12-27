@@ -8,11 +8,9 @@ import IPAnalyzer from "./IPAnalyzer.tsx";
 export type DoSInstance = {
     elapsed: string;
     results: {
-        tracked_logs: {
-            total: number;
-            messages: string[]
-        };
-        alerts: string[];
+        ip: string;
+        related_logs: {timestamp: string, message: string}[];
+        time_elapsed: string;
     };
     total: number;
 }
@@ -22,10 +20,7 @@ export type BruteForceInstance = {
     elapsed: string;
     results: {
         alerts: string[];
-        tracked_logs: {
-            message: string[];
-            total: number;
-        }
+        tracked_logs: Record<number, {messages: string[], total: number}>;
     };
     total: number;
 }

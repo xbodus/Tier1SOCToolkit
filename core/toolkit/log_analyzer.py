@@ -39,20 +39,25 @@ class LogAnalyzer:
     SQLI_REGEX = re.compile("|".join(SQLI_PATTERNS), re.IGNORECASE)
 
     def analyze_requests(self):
-        start = datetime.fromisoformat(self.data[0].get("@timestamp").replace("Z", "+00:00"))
-        end = datetime.fromisoformat(self.data[-1].get("@timestamp").replace("Z", "+00:00"))
-
-        time_range = end - start
-        seconds = int(time_range.total_seconds())
-
         results = Counter()
         for event in self.data:
             ip = event.get("client_ip")
             results[ip] += 1
 
+        most_requests = results.most_common(1)
+        ip = most_requests[0][0]
+
+        related_logs = [{"timestamp": event.get("@timestamp"), "message": event.get("message")} for event in self.data if event.get("client_ip") == ip]
+
+        start = datetime.fromisoformat(related_logs[0].get("timestamp").replace("Z", "+00:00"))
+        end = datetime.fromisoformat(related_logs[-1].get("timestamp").replace("Z", "+00:00"))
+
+        time_range = end - start
+
         return {
-            "results": results,
-            "time_elapsed": seconds,
+            "ip": ip,
+            "related_logs": related_logs,
+            "time_elapsed": time_range,
         }
 
     def analyze_auth_attempts(self):
@@ -140,7 +145,7 @@ def analyze_log(file, alert_type):
 
     analyzer = LogAnalyzer(log_lines)
 
-    if alert_type == "dos-attack":
+    if alert_type == "dos":
         dos_data = analyzer.analyze_requests()
         return dos_data
 

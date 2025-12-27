@@ -1,0 +1,51 @@
+curl -k -u elastic:Gan5Q2++ncK-6FCTRjsx -X PUT "https://localhost:9200/_ingest/pipeline/nginx-parser" -H 'Content-Type: application/json' -d'
+{
+  "description": "Parse Nginx access logs into structured fields",
+  "processors": [
+    {
+      "grok": {
+        "field": "message",
+        "patterns": [
+          "%{IPORHOST:client_ip} - %{DATA:remote_user} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:method} %{DATA:endpoint} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:bytes_sent} \"%{DATA:referrer}\" \"%{DATA:user_agent}\" %{NUMBER:request_time} \"%{DATA:spoofed_ip}\""
+        ],
+        "ignore_failure": true
+      }
+    },
+    {
+      "convert": {
+        "field": "status_code",
+        "type": "integer",
+        "ignore_failure": true
+      }
+    },
+    {
+      "convert": {
+        "field": "bytes_sent",
+        "type": "integer",
+        "ignore_failure": true
+      }
+    },
+    {
+      "convert": {
+        "field": "request_time",
+        "type": "float",
+        "ignore_failure": true
+      }
+    },
+    {
+      "set": {
+        "field": "ip",
+        "value": "{{spoofed_ip}}",
+        "if": "ctx.spoofed_ip != null && ctx.spoofed_ip != \"-\""
+      }
+    },
+    {
+      "set": {
+        "field": "ip",
+        "value": "{{client_ip}}",
+        "if": "ctx.ip == null"
+      }
+    }
+  ]
+}
+'
