@@ -175,7 +175,7 @@ def ip_reputation(request):
                 try:
                     is_valid_target(ip)
                 except (ipaddress.AddressValueError, OSError) as e:
-                    return JsonResponse({"error": str(e)})
+                    return JsonResponse({"error": "Invalid IPv4 address"})
 
                 try:
                     results = ip_check(ip, enrich)

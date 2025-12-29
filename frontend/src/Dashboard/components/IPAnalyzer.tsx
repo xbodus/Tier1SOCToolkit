@@ -12,6 +12,7 @@ export default function IPAnalyzer() {
     const [ip, setIp] = useState<string>("")
     const [checked, setChecked] = useState<boolean>(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string|null>(null)
 
     const {ipData, continent, setIpData, setContinent} = useAnalyzerContext()
 
@@ -42,12 +43,21 @@ export default function IPAnalyzer() {
                     body: formData
                 })
 
-            const data:IpResult = await response.json()
-            setIpData(data)
+            const data = await response.json()
 
-            const cont = data.results.enriched_data?.continent_code
+            if (data.error) {
+                console.log(data)
+                setError(data.error)
+            } else {
+                setError(null)
 
-            setContinent(cont)
+                const ipData = data as IpResult
+                setIpData(ipData)
+
+                const cont = data.results.enriched_data?.continent_code
+
+                setContinent(cont)
+            }
         }
 
         return setIsLoading(false)
@@ -70,7 +80,8 @@ export default function IPAnalyzer() {
             </form>
             <div className={"overflow-y"} style={{ height: "100%" }}>
                 {isLoading && (<p style={{ color: "#39ff14" }}>Loading...</p>)}
-                {!isLoading && ipData && (
+                {!isLoading && error && (<p className={"white center"}>{error}</p>)}
+                {!isLoading && ipData && !error && (
                     <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "10px"}}>
                         <div style={{ borderBottom: "2px solid #39ff14"}}>
                             <p style={{ color: "#39ff14" }}>Results for {ipData.ip}</p>
@@ -92,7 +103,7 @@ export default function IPAnalyzer() {
                         <p style={{ color: "#39ff14" }}>Suspected Malicious: {ipData.results.malicious ? "True" : "False"}</p>
                     </div>
                 )}
-                {!isLoading && ipData && (<IPThreatMap continent={continent} />)}
+                {!isLoading && ipData && !error && (<IPThreatMap continent={continent} />)}
             </div>
         </div>
     )
