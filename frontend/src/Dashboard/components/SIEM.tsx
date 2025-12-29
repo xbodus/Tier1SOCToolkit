@@ -1,9 +1,21 @@
 import {useState, useEffect, useRef} from "react";
-import {type AlertMessage, type LogMessage, useLogsContext} from "../ContextWrappers/LogsContext.tsx";
+import {
+    type LogMessage,
+    useLogsContext
+} from "../ContextWrappers/LogsContext.tsx";
+import {useAlertContext} from "../ContextWrappers/AlertContext.tsx";
+
+
+type AlertMessage = {
+    detected: boolean;
+    alert_type: string|null;
+    details: object
+}
 
 
 export default function SIEM() {
     const {logs, addLog} = useLogsContext()
+    const {logAlert,setAlert} = useAlertContext()
     const [sessionKey, setSessionKey] = useState<string | null>(null)
     const socket = useRef<WebSocket | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -44,7 +56,14 @@ export default function SIEM() {
             const data:{message: LogMessage, alert: AlertMessage} = JSON.parse(event.data)
             const message:LogMessage = data.message
             const alert:AlertMessage = data.alert
-            addLog(message, alert)
+            addLog(message)
+
+            if (alert.detected && !logAlert.type) {
+                setAlert(prev => {
+                    if (prev.type) return prev
+                    return {detected: alert.detected, type:alert.alert_type || null}
+                })
+            }
         }
 
         socket.current.onclose = () => {

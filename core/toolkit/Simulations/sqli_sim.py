@@ -42,11 +42,12 @@ attack_patterns = {
     "slow": lambda: random.uniform(2, 5),
 }
 
-def start_sqli_simulation(session_key=None, attack_speed="medium"):
+def start_sqli_simulation(session_key, start_key, attack_speed="medium"):
     stop_key = f"stop_logs_{session_key}"
+
     print("Starting SQLi Simulation")
     for endpoint in SQLI_TEST_PAYLOADS:
-        if cache.get(stop_key):
+        if cache.get(stop_key) or not cache.get(start_key):
             print("Ending SQLi")
             break
 
@@ -62,4 +63,5 @@ def start_sqli_simulation(session_key=None, attack_speed="medium"):
 
         time.sleep(delay_func())
 
+    cache.delete(start_key)
     print("SQLi Simulation is finished")

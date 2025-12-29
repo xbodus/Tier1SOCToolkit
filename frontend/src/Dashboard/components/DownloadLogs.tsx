@@ -1,8 +1,8 @@
-import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
+import {useAnalyzerContext} from "../ContextWrappers/AnalyzerContext.tsx";
 
 
 export default function DownloadLogs({start}: {start: string|null}) {
-    const {alert} = useLogsContext()
+    const {setLogDownloaded} = useAnalyzerContext()
 
     const downloadLogs = () => {
         if (!start) {
@@ -11,9 +11,9 @@ export default function DownloadLogs({start}: {start: string|null}) {
         }
         const current = new Date().toISOString()
 
-        console.log(alert.type)
-
         window.location.href =  `/api/download-logs?start=${encodeURIComponent(start)}&end=${encodeURIComponent(current)}`
+
+        return setLogDownloaded(true)
     }
 
     return (

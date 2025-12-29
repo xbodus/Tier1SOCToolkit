@@ -20,11 +20,7 @@ export type LogMessage = {
     user_agent: string;
 }
 
-export type AlertMessage = {
-    detected: boolean;
-    alert_type: string|null;
-    details: object
-}
+
 
 export type StatusInstance = Record<number, number>
 
@@ -38,13 +34,11 @@ export type EventInstance = {
 type LogsContextType = {
     ips: IPInstance;
     logs: string[];
+    addLog: (log: LogMessage) => void;
+    logEvents: EventInstance[];
     timeline: number;
     statusCodes: StatusInstance;
-    logEvents: EventInstance[]
     topIps: IPInstance;
-    alert: {detected: boolean, type: string|null};
-    flaggedLogs: object[];
-    addLog: (log: LogMessage, alert: AlertMessage) => void;
 }
 
 type LogActionsContextType = {
@@ -71,8 +65,6 @@ export function LogsProvider({children}:{children: any}) {
     const [timeline, setTimeline] = useState<number>(0)
     const [prevTime, setPrevTime] = useState<number|null>(null)
     const [logEvents, setLogEvents] = useState<EventInstance[]>([])
-    const [alert, setAlert] = useState<{detected: boolean, type: string|null}>({detected: false, type: null})
-    const [flaggedLogs, setFlaggedLogs] = useState<object[]>([])
 
 
     const getTimeline = useCallback(()=> {
@@ -106,16 +98,12 @@ export function LogsProvider({children}:{children: any}) {
         })
     }, [])
 
-    const addLog = useCallback((log: LogMessage, monitor_alert: AlertMessage) => {
+    const addLog = useCallback((log: LogMessage) => {
         setLogs(prev => [...prev, log.message])
         getStatusCodes(log)
         getTopIp(log)
         getTimeline()
 
-        if (monitor_alert.detected) {
-            setAlert({detected: monitor_alert.detected, type: monitor_alert.alert_type || null})
-            setFlaggedLogs(prev => [...prev, monitor_alert.details])
-        }
     }, [getStatusCodes, getTopIp, getTimeline])
 
     const handleReset = useCallback(() => {
@@ -133,8 +121,6 @@ export function LogsProvider({children}:{children: any}) {
         setTimeline(0)
         setPrevTime(null)
         setLogEvents([])
-        setAlert({detected: false, type: null})
-        setFlaggedLogs([])
     }, [])
 
     useEffect(() => {
@@ -171,10 +157,9 @@ export function LogsProvider({children}:{children: any}) {
         timeline,
         logEvents,
         topIps,
-        alert,
-        flaggedLogs,
         addLog,
-    }), [ips, logs, statusCodes, timeline, logEvents, topIps, alert, flaggedLogs, addLog])
+
+    }), [statusCodes, timeline, logEvents, topIps, ips, logs, addLog])
 
 
     const logActionsValue = useMemo(() => ({

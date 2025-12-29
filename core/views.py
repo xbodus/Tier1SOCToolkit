@@ -62,122 +62,107 @@ def get_session_key(request):
 def normal_worker(session_key):
     start_normal_traffic(session_key)
 
-def dos_worker(session_key):
+def dos_worker(session_key, start_key):
     time.sleep(60)
-    start_dos_simulation(session_key)
+    start_dos_simulation(session_key, start_key)
 
 def dos_simulation(request):
     session_key = get_session_key(request)
 
     stop_key = f"stop_logs_{session_key}"
-    print(cache.get(stop_key))
+    start_key = f"dos_sim_started_{session_key}"
+
+    brute_force_key = f"brute_force_sim_started_{session_key}"
+    sqli_key = f"sqli_sim_started_{session_key}"
+
+    cache.set(start_key, True)
+    cache.delete(brute_force_key)
+    cache.delete(sqli_key)
+
     while cache.get(stop_key):
         print("Waiting to start traffic")
         time.sleep(1)
 
-    threading.Thread(
-        target=normal_worker,
-        args=(session_key,),
-        daemon=True
-    ).start()
+    if not cache.get(brute_force_key) or not cache.get(sqli_key):
+        threading.Thread(
+            target=dos_worker,
+            args=(session_key, start_key,),
+            daemon=True
+        ).start()
 
-    threading.Thread(
-        target=dos_worker,
-        args=(session_key,),
-        daemon=True
-    ).start()
+        return JsonResponse({"status": "ok", "message": "Dos Simulation started"})
 
-    return JsonResponse({"status": "ok", "message": "Dos Simulation started"})
+    return JsonResponse({"status": "error", "message": "Another simulation in progress"})
 
 
 
-def brute_force_worker(session_key):
+def brute_force_worker(session_key, start_key):
     time.sleep(60)
-    start_brute_force_simulation(session_key)
+    start_brute_force_simulation(session_key, start_key)
 
 def brute_force_simulation(request):
     session_key = get_session_key(request)
 
-    threading.Thread(
-        target=normal_worker,
-        args=(session_key,),
-        daemon=True
-    ).start()
+    stop_key = f"stop_logs_{session_key}"
+    start_key = f"brute_force_sim_started_{session_key}"
 
-    threading.Thread(
-        target=brute_force_worker,
-        args=(session_key,),
-        daemon=True
-    ).start()
+    cache.set(start_key, True)
 
-    return JsonResponse({"status": "ok", "message": "Brute Force Simulation started"})
+    sqli_key = f"sqli_sim_started_{session_key}"
+    dos_key = f"dos_sim_started_{session_key}"
+
+    cache.delete(sqli_key)
+    cache.delete(dos_key)
+
+    while cache.get(stop_key):
+        print("Waiting to start traffic")
+        time.sleep(1)
+
+    if not cache.get(sqli_key) or not cache.get(dos_key):
+        threading.Thread(
+            target=brute_force_worker,
+            args=(session_key, start_key,),
+            daemon=True
+        ).start()
+
+        return JsonResponse({"status": "ok", "message": "Brute Force Simulation started"})
+
+    return JsonResponse({"status": "error", "message": "Another simulation in progress"})
 
 
 
-def sqli_worker(session_key):
+def sqli_worker(session_key, start_key):
     time.sleep(60)
-    start_sqli_simulation(session_key)
+    start_sqli_simulation(session_key, start_key)
 
 def sqli_simulation(request):
     session_key = get_session_key(request)
 
-    threading.Thread(
-        target=normal_worker,
-        args=(session_key,),
-        daemon=True
-    ).start()
+    stop_key = f"stop_logs_{session_key}"
+    start_key = f"sqli_sim_started_{session_key}"
 
-    threading.Thread(
-        target=sqli_worker,
-        args=(session_key,),
-        daemon=True
-    ).start()
+    cache.set(start_key, True)
 
-    return JsonResponse({"status": "ok", "message": "SQLi Simulation started"})
+    dos_key = f"dos_sim_started_{session_key}"
+    brute_force_key = f"brute_force_sim_started_{session_key}"
 
+    cache.delete(dos_key)
+    cache.delete(brute_force_key)
 
+    while cache.get(stop_key):
+        print("Waiting to start traffic")
+        time.sleep(1)
 
-def port_scanner(request):
-    error = None
-    if request.method == "POST":
-        try:
-            body = json.loads(request.body)
+    if not cache.get(brute_force_key) or not cache.get(dos_key):
+        threading.Thread(
+            target=sqli_worker,
+            args=(session_key, start_key,),
+            daemon=True
+        ).start()
 
-            target = body.get("target")
-            port_range = body.get("range")
+        return JsonResponse({"status": "ok", "message": "SQLi Simulation started"})
 
-            start = int(port_range.get("start", 1))
-            end = int(port_range.get("end", 1024))
-
-            try:
-                is_valid_target(target)
-            except (ipaddress.AddressValueError, OSError) as e:
-                error = e
-                raise ValueError
-
-            if not 1<= start <= 65535 or not 1 <= end <= 65535:
-                error = "Invalid entry. Ports must be between 1 and 65535."
-                raise ValueError
-            elif not start <= end:
-                error = "Invalid entry. Start port must be less than end port."
-                raise ValueError
-
-            start_time = datetime.now()
-            open_ports = threaded_port_scan(target, start, end)
-            elapsed = datetime.now() - start_time
-            context = {
-                "results": open_ports,
-                "status": elapsed
-            }
-        except ValueError:
-            context = {
-                "error": error
-            }
-
-        return JsonResponse({"data": context})
-
-    return JsonResponse({"error": error})
-
+    return JsonResponse({"status": "error", "message": "Another simulation in progress"})
 
 
 def ip_reputation(request):
@@ -356,6 +341,12 @@ def request_logs(request):
 
     # Return the WebSocket info
     ws_url = f"ws://127.0.0.1:8000/ws/logs/{session_key}/"
+
+    threading.Thread(
+        target=normal_worker,
+        args=(session_key,),
+        daemon=True
+    ).start()
 
     return JsonResponse({
         "ws_url": ws_url,
