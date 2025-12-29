@@ -17,7 +17,7 @@ async def send_request(session):
         await response.read()
 
 
-async def run_burst(session, rate_per_sec=20):
+async def run_burst(session, rate_per_sec=10):
     tasks = []
     for _ in range(rate_per_sec):
         tasks.append(asyncio.create_task(send_request(session)))
@@ -25,16 +25,19 @@ async def run_burst(session, rate_per_sec=20):
     await asyncio.gather(*tasks)
 
 
-async def fetch(session_key):
+async def fetch(session_key, start_key):
     print("Starting DOS attack")
     stop_key = f"stop_logs_{session_key}"
 
+    ttl = 10000
     async with aiohttp.ClientSession() as session:
-        while not cache.get(stop_key):
+        while not cache.get(stop_key) and cache.get(start_key) and ttl > 0:
             await run_burst(session)
+            ttl -= 1
 
+    cache.delete(start_key)
     print("Stopped DOS attack")
 
 
-def start_dos_simulation(session_key):
-    asyncio.run(fetch(session_key))
+def start_dos_simulation(session_key, start_key):
+    asyncio.run(fetch(session_key, start_key))

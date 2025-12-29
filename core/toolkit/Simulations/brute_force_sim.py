@@ -49,15 +49,16 @@ COMMON_PASSWORDS = [
 
 
 
-def start_brute_force_simulation(session_key, pattern="medium"):
+def start_brute_force_simulation(session_key, start_key, pattern="medium"):
     stop_key = f"stop_logs_{session_key}"
+
     delay_func = attack_patterns.get(pattern, attack_patterns["medium"])
 
     success = 0
 
     print("Starting brute force attack")
     for user in USERS:
-        if cache.get(stop_key):
+        if cache.get(stop_key) and cache.get(start_key):
             break
 
         user = user
@@ -82,6 +83,8 @@ def start_brute_force_simulation(session_key, pattern="medium"):
     if success == 0:
         print("BRUTE FORCE ATTEMPT FAILED")
 
+    session.close()
+    cache.delete(start_key)
     print("Stopped brute force attack")
 
 

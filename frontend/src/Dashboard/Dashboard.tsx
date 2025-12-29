@@ -4,11 +4,50 @@ import React, {useState, Suspense, type ReactNode} from "react"
 
 import Simulations from "./components/SimControls.tsx"
 import {useLogActionsContext} from "./ContextWrappers/LogsContext.tsx";
+import {useAlertContext} from "./ContextWrappers/AlertContext.tsx";
 
+
+
+
+const SIEMNav = React.memo(({setContent, content}:{setContent: React.Dispatch<React.SetStateAction<number>>, content:number}) => {
+    const {logAlert} = useAlertContext()
+
+    const handleDashboard = (num:number) => {
+        if (!logAlert.type) {
+            alert("No alerts triggered. Keep monitoring for abnormal traffic")
+            return
+        }
+
+        setContent(num)
+    }
+
+    return(
+        <>
+            <button className={`siem-lab-control ${content === 2 ? "active" : ""}`} onClick={() => handleDashboard(2)}>Analyze</button>
+            <button className={`siem-lab-control ${content === 4 ? "active" : ""}`} onClick={() => handleDashboard(4)}>Begin Report</button>
+        </>
+    )
+})
+
+
+const ResetDashboard = () => {
+    const {resetAlert} = useAlertContext()
+    const {handleReset} = useLogActionsContext()
+
+    const resetDashboard = () => {
+        handleReset()
+        resetAlert()
+    }
+
+    return (
+        <>
+            <a href={"/lab"}><button className="siem-lab-exit" onClick={() => resetDashboard()}>Select Simulation</button></a>
+        </>
+    )
+}
 
 
 export default function Dashboard() {
-    const {handleReset} = useLogActionsContext()
     const [content, setContent] = useState<number>(1)
     const [simulation, setSimulation] = useState<number|null>(null)
     const [startTime, setStartTime] = useState<string|null>(null)
@@ -42,18 +81,17 @@ export default function Dashboard() {
             <section id='react-dashboard' style={{ height: "100%", width: "100%"}}>
                 <h1 className="siem-lab-label">Rouge Operations Security Center</h1>
                 <section className="siem-lab-content">
-                    <Suspense fallback={<p>Loading…</p>}>
+                    <Suspense fallback={<p style={{ color: "#39ff14" }}>Loading…</p>}>
                         {VIEWS[content]}
                     </Suspense>
                 </section>
 
                 <section id="routing">
-                    <div>
+                    <div className={"flex flex-column"}>
                         <button className={`siem-lab-control ${content === 1 ? "active" : ""}`} onClick={() => setContent(1)}>SIEM</button>
-                        <button className={`siem-lab-control ${content === 2 ? "active" : ""}`} onClick={() => setContent(2)}>Analyze</button>
+                        <SIEMNav content={content} setContent={setContent} />
                     </div>
-                    <button className="siem-lab-exit" onClick={() => setContent(4)}>Begin Report</button>
-                    <a href={"/lab"}><button className="siem-lab-exit" onClick={() => handleReset()}>Select Simulation</button></a>
+                    <ResetDashboard />
                     <a href="/"><button className="siem-lab-exit">Leave Lab</button></a>
                 </section>
             </section>

@@ -1,7 +1,7 @@
-import type {BruteForceInstance, DoSInstance, SQLiInstance} from "./AnalyzerContent.tsx";
-import {useLogsContext} from "../ContextWrappers/LogsContext.tsx";
+import type {BruteForceInstance, DoSInstance, SQLiInstance} from "../ContextWrappers/AnalyzerContext.tsx";
 import {useState} from "react";
 import {formatDuration} from "../Utils/utils.tsx";
+import {useAlertContext} from "../ContextWrappers/AlertContext.tsx";
 
 
 interface DataProps {
@@ -9,11 +9,11 @@ interface DataProps {
 }
 
 export default function FileData({data}: DataProps) {
-    const {alert} = useLogsContext()
+    const {logAlert} = useAlertContext()
     const [currentPage, setCurrentPage] = useState<number>(1)
     const logsPerPage:number = 15
 
-    if (alert.type === "dos") {
+    if (logAlert.type === "dos") {
         const dosData = data as DoSInstance
         const totalPages:number = Math.ceil(dosData.results.related_logs.length / logsPerPage)
         const startIndex:number = (currentPage - 1) * logsPerPage
@@ -97,7 +97,7 @@ export default function FileData({data}: DataProps) {
         )
     }
 
-    if (alert.type === "brute-force") {
+    if (logAlert.type === "brute-force") {
         const bruteForceData = data as BruteForceInstance
         const logData: {total: number, messages: string[]} = Object.entries(bruteForceData.results.tracked_logs)[0][1]
 
@@ -115,7 +115,7 @@ export default function FileData({data}: DataProps) {
         )
     }
 
-    if (alert.type === "sqli") {
+    if (logAlert.type === "sqli") {
         const sqliData = data as SQLiInstance
         return (
             <div className={"analyzer-tool-window overflow-y"}>
