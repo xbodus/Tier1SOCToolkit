@@ -1,5 +1,5 @@
 import FileInput from "./FileInput.tsx";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import FileData from "./FileData.tsx";
 import IPAnalyzer from "./IPAnalyzer.tsx";
 import {type DoSInstance, type BruteForceInstance, type SQLiInstance, useAnalyzerContext} from "../ContextWrappers/AnalyzerContext.tsx";
@@ -14,7 +14,7 @@ export default function AnalyzerContent() {
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const {data, setData} = useAnalyzerContext()
     const {logAlert} = useAlertContext()
-    const {logDownloaded} = useAnalyzerContext()
+    const {logDownloaded, error, setError} = useAnalyzerContext()
 
     const handleLoading = (loading:boolean) => {
         setIsLoading(loading)
@@ -24,8 +24,13 @@ export default function AnalyzerContent() {
         setData(newData)
     }
 
+    useEffect(() => {
+        if (!error) return
+        alert(error)
+    }, [error])
+
     return (
-        <div className="siem-content">
+        <div className="analyzer-content">
             {!logAlert.type && (
                 <p className={"white center"}>No attack detected. Nothing to analyze. Go back to SIEM and continue monitoring for abnormal traffic.</p>
             )}
@@ -34,9 +39,9 @@ export default function AnalyzerContent() {
             )}
             {logAlert.type && logDownloaded && (
                 <>
-                    <FileInput setLoading={handleLoading} setData={handleData} />
+                    <FileInput setLoading={handleLoading} setData={handleData} setError={setError} />
                     {isLoading && (<p style={{ color: "#39ff14" }}>Loading...</p> )}
-                    {!isLoading && data && (
+                    {!isLoading && data && !error && (
                         <div className={"analyzer-window"}>
                             <FileData data={data} />
                             <IPAnalyzer />

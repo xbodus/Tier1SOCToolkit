@@ -78,10 +78,12 @@ type AnalyzerContextType = {
     logDownloaded: boolean;
     timeframe: string|null;
     bruteForceAttempts: number;
+    error: string|null;
     setData: React.Dispatch<React.SetStateAction<DoSInstance | BruteForceInstance | SQLiInstance | null>>;
     setIpData:  React.Dispatch<React.SetStateAction<IpResult | null>>;
     setContinent:  React.Dispatch<React.SetStateAction<string | null | undefined>>;
-    setLogDownloaded: React.Dispatch<React.SetStateAction<boolean>>
+    setLogDownloaded: React.Dispatch<React.SetStateAction<boolean>>;
+    setError: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 
@@ -96,12 +98,13 @@ export function AnalyzerProvider({children}: {children: any}) {
     const [logDownloaded, setLogDownloaded] = useState<boolean>(false)
     const [timeframe, setTimeframe] = useState<string|null>(null)
     const [bruteForceAttempts, setBruteForceAttempts] = useState(0)
+    const [error, setError] = useState<string|null>(null)
     const {logAlert} = useAlertContext()
 
 
     useEffect(() => {
         const handleAttackTimeframe = () => {
-            if (!logAlert.type || logAlert.type === "sqli" || !data) return
+            if (!logAlert.type || logAlert.type === "sqli" || !data || error) return
 
             if (logAlert.type === "dos") {
                 try {
@@ -128,7 +131,7 @@ export function AnalyzerProvider({children}: {children: any}) {
         }
 
         handleAttackTimeframe()
-    }, [data, logAlert])
+    }, [data, logAlert, error])
 
 
     const AnalyzerValues = useMemo(() => ({
@@ -138,11 +141,13 @@ export function AnalyzerProvider({children}: {children: any}) {
         logDownloaded,
         timeframe,
         bruteForceAttempts,
+        error,
         setData,
         setIpData,
         setContinent,
-        setLogDownloaded
-    }), [data, ipData, continent, logDownloaded, timeframe, bruteForceAttempts, setData, setIpData, setContinent, setLogDownloaded])
+        setLogDownloaded,
+        setError,
+    }), [data, ipData, continent, logDownloaded, timeframe, bruteForceAttempts, error, setData, setIpData, setContinent, setLogDownloaded, setError])
 
     return (
         <AnalyzerContext.Provider value={AnalyzerValues}>

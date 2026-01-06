@@ -124,7 +124,7 @@ export default function FileData({data}: DataProps) {
                     return (
                         <div key={index} className={"pb-3 log-item"}>
                             <p style={{ color: "#39ff14" }}>IP: {JSON.stringify(data.ip)}</p>
-                            <p style={{ color: "#39ff14" }}>Flagged Activity: {JSON.stringify(data.message)}</p>
+                            <p style={{ color: "#39ff14", wordWrap: "break-word" }}>Flagged Activity: {JSON.stringify(data.message)}</p>
                             <p style={{ color: "#39ff14" }}>Matched SQL Pattern: {JSON.stringify(data.matched)}</p>
                         </div>
                     )

@@ -7,7 +7,50 @@ body, html {
     padding: 0;
     height: 100dvh;
     width: 100dvw;
-    background-color: #1a1a1a;
+    background-color: #000;
+}
+
+.navigation {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    font-family: "Google Sans", sans-serif;
+    color: #fff;
+}
+
+.navigation > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 100%;
+}
+
+.navigation > div > h1 {
+    font-size: 2.5rem;
+}
+
+.navigation-links {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    font-family: "Google Sans", sans-serif;
+    font-weight: 100;
+    font-size: 1.25rem;
+}
+
+.navigation-links > li > a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.navigation-links > li > a:hover {
+    opacity: 50%;
+}
+
+.navigation-links > li > a:visited {
+    color: #fff;
 }
 
 /* dashboard */
@@ -100,11 +143,12 @@ body, html {
     flex-direction: column;
     justify-content: space-between;
     align-items: start;
-    padding-right: 1.5rem;
+    padding-right: 1.25rem;
 }
 
 .siem-lab-control {
     position: relative;
+    padding: 1rem .5rem;
     right: 2px;
     writing-mode: sideways-rl;
     background-color: #1a1a1a;
@@ -150,13 +194,22 @@ body, html {
 
 .siem-lab-exit {
     position: relative;
+    padding: .75rem .25rem;
     left: 4px;
     writing-mode: sideways-rl;
     background-color: transparent;
     font-family: "Orbitron", monospace;
     color: #39ff14;
     border: 2px solid #39ff14;
-    border-radius: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.siem-lab-exit:hover {
+    background-color: rgba(57, 255, 20, 0.3);
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
+    inset 0 0 5px rgba(57, 255, 20, 0.5);
+    transition: .5s;
 }
 
 
@@ -168,6 +221,9 @@ body, html {
     justify-content: space-between;
     height: 100%;
     width: 100%;
+    overflow-y: auto;
+    scrollbar-color: #39ff14 transparent;
+    scrollbar-width: thin;
 }
 
 .visuals-wrapper {
@@ -175,7 +231,13 @@ body, html {
     gap: 20px;
     justify-content: space-between;
     align-items: center;
-    height: 50%;
+    height: 100%;
+}
+
+.visuals-sub-wrapper {
+    display: flex;
+    height: 100%;
+    width: 50%;
 }
 
 .graph-container {
@@ -183,10 +245,7 @@ body, html {
     flex-direction: column;
     gap: 10px;
     height: 100%;
-    width: 25%;
-}
-
-.graph-container:first-of-type {
+    min-height: 300px;
     width: 50%;
 }
 
@@ -199,6 +258,7 @@ body, html {
 .log-window {
     padding: 0 .5rem;
     height: 100%;
+    max-height: 500px;
     width: 100%;
     border: 2px solid #39ff14;
     border-radius: 7px;
@@ -228,13 +288,34 @@ body, html {
 }
 
 /* Analyzer Styling */
+.analyzer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    scrollbar-color: #39ff14 transparent;
+    scrollbar-width: thin;
+}
+
+.file-input-wrapper {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    margin: 0 auto;
+}
+
 .form {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 10px;
     flex-wrap: wrap;
     border-radius: 5px;
     border: 2px solid #39ff14;
-    padding: .5rem;
+    padding: .75rem;
     margin: .5rem 0;
     box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
     inset 0 0 5px rgba(57, 255, 20, 0.5);
@@ -251,6 +332,13 @@ body, html {
     margin-right: .5rem;
     box-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
     cursor: pointer;
+}
+
+.custom-file-input::-webkit-file-upload-button:hover {
+    background-color: rgba(57, 255, 20, 0.3);
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
+    inset 0 0 5px rgba(57, 255, 20, 0.5);
+    transition: 1s;
 }
 
 input[type="file"] {
@@ -316,6 +404,7 @@ input[type="checkbox"]:checked::after {
 }
 
 .siem-button {
+    height: fit-content;
     background-color: transparent;
     color: #39ff14;
     font-family: "Doto", monospace;
@@ -325,6 +414,13 @@ input[type="checkbox"]:checked::after {
     padding: .35rem .5rem;
     box-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
     cursor: pointer;
+}
+
+.siem-button:hover {
+    background-color: rgba(57, 255, 20, 0.3);
+    box-shadow: 0 0 5px rgba(57, 255, 20, 0.5),
+    inset 0 0 5px rgba(57, 255, 20, 0.5);
+    transition: .5s;
 }
 
 .analyzer-window {
@@ -417,6 +513,10 @@ input[type="checkbox"]:checked::after {
     height: 50%;
 }
 
+.h-30 {
+    height: 30%;
+}
+
 .flex {
     display: flex;
 }
@@ -470,14 +570,6 @@ input[type="checkbox"]:checked::after {
     box-shadow: 0 0 10px rgba(0,0,0,0.05);
 }
 
-h1 {
-    color: #007bff;
-}
-
-a {
-    color: #007bff;
-    text-decoration: none;
-}
 
 a:hover {
     text-decoration: underline;
@@ -531,4 +623,47 @@ a:hover {
 
 .pointer {
     cursor: pointer;
+}
+
+
+@media (max-width: 1024px) {
+    .visuals-wrapper {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .graph-container {
+        width: 100%;
+    }
+
+    .visuals-sub-wrapper {
+        width: 100%;
+    }
+
+    .side-controls {
+        width: 100%;
+    }
+
+    .analyzer-window {
+        flex-direction: column;
+    }
+
+    .analyzer-tool-window {
+        width: 100%;
+        min-height: 500px;
+    }
+
+    .file-input-wrapper {
+        flex-direction: column;
+        gap: 0;
+        margin-bottom: 2rem;
+    }
+}
+
+
+@media (max-device-width: 500px) {
+    #crt-overlay {
+        visibility: hidden;
+    }
+
 }
