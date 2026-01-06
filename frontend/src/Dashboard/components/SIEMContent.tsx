@@ -22,17 +22,19 @@ export default function SIEMContent({start}: {start:string|null}) {
         <div className="siem-content">
             <VisualsWrapper>
                 <LineChartVolume data={logEvents} />
-                <PieChartVolume data={pieData} />
-                <StatusCodeBreakdown data={statusCodes} />
+                <div className={"visuals-sub-wrapper"}>
+                    <PieChartVolume data={pieData} />
+                    <StatusCodeBreakdown data={statusCodes} />
+                </div>
             </VisualsWrapper>
             <h2 className="chart-title">Activity Logs:</h2>
-            <div style={{ display: "flex", gap: 10, width: "100%", height: "45%" }}>
+            <VisualsWrapper>
                 <SIEM />
                 <div className="side-controls">
                     <StatusNotification alert={logAlert.detected} />
                     <DownloadLogs start={start} />
                 </div>
-            </div>
+            </VisualsWrapper>
         </div>
     )
 }

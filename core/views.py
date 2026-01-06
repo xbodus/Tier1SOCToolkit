@@ -41,7 +41,7 @@ es = Elasticsearch(
 
 
 def home(request):
-    return render(request, 'core/home.html')
+    return render(request, 'core/partials/nav.html')
 
 
 def lab(request):
@@ -165,7 +165,22 @@ def sqli_simulation(request):
     return JsonResponse({"status": "error", "message": "Another simulation in progress"})
 
 
+def check_rate_limit(request):
+    ip = request.META.get('REMOTE_ADDR')
+    cache_key = f'upload_limit_{ip}'
+
+    request_count = cache.get(cache_key, 0)
+    if request_count >= 5:
+        return True
+
+    cache.set(cache_key, request_count + 1, 60)
+    return False
+
 def ip_reputation(request):
+    rate_limit = check_rate_limit(request)
+    if rate_limit:
+        return JsonResponse({"error": "Too many requests. Please wait."}, status=429)
+
     if request.method == "POST":
         try:
             if "ip" in request.POST and "enrich" in request.POST:
@@ -259,6 +274,10 @@ def download_logs(request):
 
 
 def log_analyzer(request):
+    rate_limit = check_rate_limit(request)
+    if rate_limit:
+        return JsonResponse({"error": "Too many requests. Please wait."}, status=429)
+
     if request.method == "POST":
         try:
             if "file" in request.FILES:

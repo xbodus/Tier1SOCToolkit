@@ -1,13 +1,386 @@
 {% extends "core/base.html" %}
 {% load django_vite %}
 
+{% block title %}Rouge Operations - Home{% endblock %}
+
+{% block styling %}
+    <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                background: #2e5e02;
+                overflow-x: hidden;
+            }
+
+            #hero {
+                position: relative;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+
+            .fade-overlay {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 300px;
+                background: linear-gradient(to bottom, transparent, #2f5e09);
+                pointer-events: none;
+            }
+
+            .fade-overlay-2 {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 200px;
+                background: linear-gradient(to top, transparent, #000);
+                pointer-events: none;
+            }
+
+            .content {
+                background: #2f5e09;
+                color: #fff;
+                padding: 50px 20px;
+                text-align: center;
+            }
+        </style>
+{% endblock %}
+
+
 {% block content %}
-    <div>
-        <h1>Rouge Operations</h1>
-        <ul>
-            <li><a href="{% url 'lab' %}">Lab</a></li>
-        </ul>
+    {% block navigation %}{% endblock %}
+    <div id="hero">
+        <canvas id="canvas"></canvas>
+        <div class="fade-overlay"></div>
+        <div class="fade-overlay-2"></div>
     </div>
+
+    <div class="content">
+        <h2>Your Content Continues Here</h2>
+        <p>The circuit grid fades smoothly into this section</p>
+    </div>
+{% endblock %}
+
+
+{% block script %}
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let dots = [];
+        let pulses = [];
+        let trails = []; // For fade-out trails
+        let activePulsePositions = []; // Track active pulse positions
+        let gridSpacing = 20;
+        let dotRadius = 5;
+        let mouseX = -1000;
+        let mouseY = -1000;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initGrid();
+        }
+
+        function initGrid() {
+            dots = [];
+            const cols = Math.ceil(canvas.width / gridSpacing) + 1;
+            const rows = Math.ceil(canvas.height / gridSpacing) + 1;
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    dots.push({
+                        x: col * gridSpacing,
+                        y: row * gridSpacing,
+                        col: col,
+                        row: row,
+                        baseOpacity: 0.1,
+                        glowIntensity: 0
+                    });
+                }
+            }
+        }
+
+        function createPulse(startCol, startRow, direction = null, maxDistance = null) {
+            if (!direction) {
+                direction = Math.random() > 0.5 ? 1 : -1; // 1 = right, -1 = left
+            }
+
+            if (!maxDistance) {
+                // 70% chance of longer paths (4-7 dots), 30% chance of shorter (1-3 dots)
+                if (Math.random() < 0.7) {
+                    maxDistance = Math.floor(7 + Math.random() * 4); // 7-11 dots
+                } else {
+                    maxDistance = Math.floor(3 + Math.random() * 3); // 3-6 dots
+                }
+            }
+
+            pulses.push({
+                col: startCol,
+                row: startRow,
+                direction: direction,
+                life: 0,
+                maxLife: 180 + Math.random() * 60, // 3-4 seconds at 60fps
+                intensity: 0, // Start at 0 for fade-in
+                fadeInDuration: 90, // 1 second at 60fps
+                speed: 0.08 + Math.random() * 0.04, // Slower speed
+                startCol: startCol,
+                maxDistance: maxDistance,
+                traveledDistance: 0
+            });
+
+            // Track this position as active
+            activePulsePositions.push({ col: startCol, row: startRow });
+        }
+
+        function updatePulses() {
+            // Clean up old positions
+            activePulsePositions = activePulsePositions.filter(pos =>
+                pulses.some(p => p.col === pos.col && p.row === pos.row && p.life < 60)
+            );
+
+            for (let i = pulses.length - 1; i >= 0; i--) {
+                const p = pulses[i];
+                p.life += p.speed;
+
+                // Move pulse
+                if (p.life % 1 < p.speed) {
+                    const prevCol = p.col;
+                    const prevRow = p.row;
+
+                    p.col += p.direction;
+
+                    // Track distance traveled
+                    if (p.col !== prevCol) {
+                        p.traveledDistance++;
+
+                        // Add trail for previous position
+                        trails.push({
+                            col: prevCol,
+                            row: prevRow,
+                            intensity: 0.5,
+                            decay: 0.01 // 0.5-1 sec fade
+                        });
+                    }
+
+                    // Random vertical shift (±1 row)
+                    if (Math.random() > 0.7) {
+                        p.row += Math.random() > 0.5 ? 1 : -1;
+                    }
+                }
+
+                // Fade in effect
+                if (p.life < p.fadeInDuration) {
+                    p.intensity = p.life / p.fadeInDuration;
+                } else {
+                    // Fade out intensity based on remaining life
+                    const remainingLife = p.maxLife - p.life;
+                    const fadeOutStart = p.maxLife * 0.7; // Start fading at 70% of max life
+                    if (remainingLife < fadeOutStart) {
+                        p.intensity = Math.max(0, remainingLife / fadeOutStart);
+                    } else {
+                        p.intensity = 1;
+                    }
+                }
+
+                // Apply glow to current dot
+                const dot = dots.find(d => d.col === p.col && d.row === p.row);
+                if (dot) {
+                    dot.glowIntensity = Math.max(dot.glowIntensity, p.intensity);
+                }
+
+                // Illuminate surrounding dots (radiating energy effect!)
+                const radiusInDots = 4;
+                dots.forEach(d => {
+                    const colDist = Math.abs(d.col - p.col);
+                    const rowDist = Math.abs(d.row - p.row);
+                    const distance = Math.sqrt(colDist * colDist + rowDist * rowDist);
+
+                    if (distance <= radiusInDots && distance > 0) {
+                        const radiationIntensity = (1 - distance / radiusInDots) * p.intensity * 0.7; // Another 20% boost (0.48 * 1.2)
+                        d.glowIntensity = Math.max(d.glowIntensity, radiationIntensity);
+                    }
+                });
+
+                // Remove dead pulses or pulses that traveled max distance
+                if (p.life >= p.maxLife ||
+                    p.traveledDistance >= p.maxDistance ||
+                    p.col < 0 ||
+                    p.col >= Math.ceil(canvas.width / gridSpacing)) {
+                    pulses.splice(i, 1);
+                }
+            }
+
+            // Update trails
+            for (let i = trails.length - 1; i >= 0; i--) {
+                const t = trails[i];
+                t.intensity -= t.decay;
+
+                const dot = dots.find(d => d.col === t.col && d.row === t.row);
+                if (dot) {
+                    dot.glowIntensity = Math.max(dot.glowIntensity, t.intensity);
+                }
+
+                if (t.intensity <= 0) {
+                    trails.splice(i, 1);
+                }
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Decay glow
+            dots.forEach(dot => {
+                dot.glowIntensity *= 0.85;
+            });
+
+            // Draw dots
+            dots.forEach(dot => {
+                const glowColor = `rgba(57, 255, 20, ${dot.glowIntensity})`;
+                const baseColor = `rgba(255, 255, 255, ${dot.baseOpacity})`;
+
+                // Draw glow
+                if (dot.glowIntensity > 0.05) {
+                    const glowRadius = dotRadius + (dot.glowIntensity * 15); // Bigger glow
+                    {#const gradient = ctx.createRadialGradient(dot.x, dot.y, 0, dot.x, dot.y, glowRadius);#}
+                    {#gradient.addColorStop(0, glowColor);#}
+                    {#gradient.addColorStop(0.4, `rgba(57, 255, 20, ${dot.glowIntensity * 0.5})`);#}
+                    {#gradient.addColorStop(1, 'rgba(57, 255, 20, 0)');#}
+
+                    ctx.fillStyle = baseColor;
+                    ctx.beginPath();
+                    ctx.arc(dot.x, dot.y, glowRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw base dot
+                ctx.fillStyle = dot.glowIntensity > 0.3 ? glowColor : baseColor;
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function animate() {
+            updatePulses();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // Random pulse generation - spawn 2 pulses at a time
+        setInterval(() => {
+            const cols = Math.ceil(canvas.width / gridSpacing);
+            const rows = Math.ceil(canvas.height / gridSpacing);
+            const minDistance = 25; // Minimum distance between pulses
+
+            // Spawn 2 pulses with distance check
+            let attempts = 0;
+            let spawnedPulses = 0;
+
+            while (spawnedPulses < 2 && attempts < 50) {
+                const randomCol = Math.floor(Math.random() * cols);
+                const randomRow = Math.floor(Math.random() * rows);
+
+                // Check if too close to existing active pulses
+                const tooClose = activePulsePositions.some(pos => {
+                    const colDist = Math.abs(pos.col - randomCol);
+                    const rowDist = Math.abs(pos.row - randomRow);
+                    return colDist < minDistance && rowDist < minDistance;
+                });
+
+                if (!tooClose) {
+                    createPulse(randomCol, randomRow);
+                    spawnedPulses++;
+                }
+                attempts++;
+            }
+        }, 2000);
+
+        // Random single dot sparkles with staggered timing
+        function spawnSparkle() {
+            const cols = Math.ceil(canvas.width / gridSpacing);
+            const rows = Math.ceil(canvas.height / gridSpacing);
+            const randomCol = Math.floor(Math.random() * cols);
+            const randomRow = Math.floor(Math.random() * rows);
+
+            const dot = dots.find(d => d.col === randomCol && d.row === randomRow);
+            if (dot) {
+                // 1.5 second fade-in for sparkles
+                const targetIntensity = 0.6 + Math.random() * 0.4;
+                const fadeSteps = 90; // 1.5 seconds at 60fps
+                let currentStep = 0;
+
+                const sparkleInterval = setInterval(() => {
+                    currentStep++;
+                    dot.glowIntensity = Math.max(dot.glowIntensity, (targetIntensity * currentStep / fadeSteps));
+
+                    if (currentStep >= fadeSteps) {
+                        clearInterval(sparkleInterval);
+                    }
+                }, 1000 / 60);
+            }
+
+            // Schedule next sparkle with random delay
+            const nextDelay = 200 + Math.random() * 600; // 0.2-0.8 seconds
+            setTimeout(spawnSparkle, nextDelay);
+        }
+
+        // Kick off the staggered sparkle chain
+        spawnSparkle();
+
+        // Mouse interaction - radial glow effect
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+
+            const hoverRadius = gridSpacing * 3; // 3 dot radius
+
+            dots.forEach(dot => {
+                const distance = Math.sqrt(
+                    Math.pow(dot.x - mouseX, 2) +
+                    Math.pow(dot.y - mouseY, 2)
+                );
+
+                if (distance < hoverRadius) {
+                    // Closer dots glow brighter (inverse relationship with distance)
+                    const intensity = 1 - (distance / hoverRadius);
+                    dot.glowIntensity = Math.max(dot.glowIntensity, intensity * 0.8);
+                }
+            });
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            const col = Math.round(clickX / gridSpacing);
+            const row = Math.round(clickY / gridSpacing);
+
+            createPulse(col, row, 1);
+            createPulse(col, row, -1);
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+
+        resizeCanvas();
+        animate();
+    </script>
 {% endblock %}
 
 {% block vite_asset %}

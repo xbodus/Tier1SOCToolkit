@@ -17,6 +17,7 @@ export default function SIEM() {
     const {logs, addLog} = useLogsContext()
     const {logAlert,setAlert} = useAlertContext()
     const [sessionKey, setSessionKey] = useState<string | null>(null)
+    const [ws, setWs] = useState<string|null>(null)
     const socket = useRef<WebSocket | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [cooldown, setCooldown] = useState(0)
@@ -34,6 +35,7 @@ export default function SIEM() {
                     return
                 }
                 setSessionKey(data.session_key)
+                setWs(data.ws_url)
             } catch (err) {
                 console.error("Failed to get session key:", err)
             }
@@ -46,7 +48,7 @@ export default function SIEM() {
     useEffect(() => {
         if (!sessionKey) return
 
-        socket.current = new WebSocket(`ws://127.0.0.1:8000/ws/logs/${sessionKey}/`)
+        socket.current = ws ? new WebSocket(ws) : new WebSocket(`ws://127.0.0.1:8000/ws/logs/${sessionKey}/`)
 
         socket.current.onopen = () => {
             console.log("WebSocket connected")
@@ -75,7 +77,7 @@ export default function SIEM() {
         }
 
         return () => socket.current?.close()
-    }, [sessionKey])
+    }, [sessionKey, ws])
 
     useEffect(() => {
         if (logs.length === 0) {

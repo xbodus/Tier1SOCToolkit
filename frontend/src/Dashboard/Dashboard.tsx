@@ -23,6 +23,7 @@ const SIEMNav = React.memo(({setContent, content}:{setContent: React.Dispatch<Re
 
     return(
         <>
+            <button className={`siem-lab-control ${content === 1 ? "active" : ""}`} onClick={() => setContent(1)}>SIEM</button>
             <button className={`siem-lab-control ${content === 2 ? "active" : ""}`} onClick={() => handleDashboard(2)}>Analyze</button>
             <button className={`siem-lab-control ${content === 4 ? "active" : ""}`} onClick={() => handleDashboard(4)}>Begin Report</button>
         </>
@@ -88,7 +89,6 @@ export default function Dashboard() {
 
                 <section id="routing">
                     <div className={"flex flex-column"}>
-                        <button className={`siem-lab-control ${content === 1 ? "active" : ""}`} onClick={() => setContent(1)}>SIEM</button>
                         <SIEMNav content={content} setContent={setContent} />
                     </div>
                     <ResetDashboard />

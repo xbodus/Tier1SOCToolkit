@@ -10,6 +10,23 @@ export default function LineChartVolume({data}:{data: EventInstance[]}) {
 
     const visible = data.filter(d => now - d.timestamp <= WINDOW)
 
+    const CustomTooltip = ({ active, payload, label }: {active?: boolean, payload?:any, label?:number}) => {
+        if (active && payload && payload.length) {
+            const formatter = (timestamp:number|undefined) => {
+                if (!timestamp) return
+                return new Date(timestamp).toLocaleTimeString()
+            }
+            const ts = formatter(label)
+
+            return (
+                <div style={{ backgroundColor: "#1a1a1a", color: "#39ff14", padding: ".25rem 1rem", border: "2px solid #39ff14", textAlign: "center"}}> {/* Your custom wrapper class */}
+                    {`${ts}`}<br/>{`Value: ${payload[0].value}`}
+                </div>
+            );
+        }
+        return null;
+    }
+
     return (
         <div className="graph-container">
             <h2 className="chart-title">Activity:</h2>
@@ -30,9 +47,7 @@ export default function LineChartVolume({data}:{data: EventInstance[]}) {
                         axisLine={{ stroke: "#39ff14" }}
                         width="auto"
                     />
-                    <Tooltip
-                        labelFormatter={(ts) => new Date(ts).toLocaleTimeString()}
-                    />
+                    <Tooltip content={<CustomTooltip />} />
 
                     <Line
                         type="monotone"

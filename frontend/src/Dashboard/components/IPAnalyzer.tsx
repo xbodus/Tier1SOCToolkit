@@ -76,7 +76,7 @@ export default function IPAnalyzer() {
                         <input className={"custom-input"} name={"enrich-input"} type={"checkbox"} checked={checked} onChange={() => handleChecked()} />
                     </div>
                 </div>
-                <button className="siem-button" type={"submit"}>Analyze</button>
+                <button className="siem-button" type={"submit"}>Analyze IP</button>
             </form>
             <div className={"overflow-y"} style={{ height: "100%" }}>
                 {isLoading && (<p style={{ color: "#39ff14" }}>Loading...</p>)}
