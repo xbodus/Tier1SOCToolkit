@@ -5,6 +5,11 @@ from . import views
 urlpatterns = [
     path('', views.home, name='home'),
     path('lab', views.lab, name='lab'),
+    path('articles', views.articles_list, name='articles'),
+    path('articles/<str:slug>', views.article_detail, name='article_detail'),
+    path('resources', views.resources, name='resources'),
+    path('about', views.about, name='about'),
+    path('api/articles/search', views.article_search_suggestions, name='search_articles'),
     path('api/ip_reputation', views.ip_reputation, name="ip_reputation"),
     path('api/log_analyzer', views.log_analyzer, name="log_analyzer"),
     path('api/logs/ingest', views.log_ingestion, name="log_ingest"),

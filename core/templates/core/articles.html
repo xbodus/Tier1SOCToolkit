@@ -1,0 +1,80 @@
+{% extends "core/base_page.html" %}
+
+{% block title %}Rouge Operations - Articles{% endblock %}
+
+{% block extended_content %}
+    <!-- Title Bar -->
+    <div class="title-bar">
+        <h1>Articles Center</h1>
+        {% include 'core/partials/search.html' %}
+    </div>
+
+    <!-- Articles Dashboard -->
+    <div class="articles-dashboard">
+        {% include 'core/partials/articles_sidebar.html' %}
+        <section id="articles" class="card-wrapper">
+            <div class="border-overlay"></div>
+            {% for el in articles %}
+                <a href="articles/{{ el.slug }}" onmouseenter="enterHover(this)" onmouseleave="exitHover(this)">
+                    <div class="article-card">
+                        <div class="card-details flex justify-between">
+                            <p>{{ el.title }}</p>
+                            <p>{{ el.read_time }} min read</p>
+                        </div>
+                        <div class="card-img-wrapper grow">
+                            <div class="black-overlay opacity-90"></div>
+                            <img src="media/{{ el.featured_image }}" alt="Globe" />
+                        </div>
+                        <div class="card-details" style="height: 300px; padding: 1rem 0">
+                            <p>{{ el.created_date | date }}</p>
+                            <p>{{ el.excerpt }}</p>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </section>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <span class="step-links">
+            {% if articles.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ articles.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ articles.number }} of {{ articles.paginator.num_pages }}
+            </span>
+
+            {% if articles.has_next %}
+                <a href="?page={{ articles.next_page_number }}">next</a>
+                <a href="?page={{ articles.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    <div class="spacer"></div>
+{% endblock %}
+
+{% block extended_scripts %}
+    <script>
+        function enterHover(el) {
+            const imgWrapper = el.querySelector(".card-img-wrapper");
+            const overlay = el.querySelector(".black-overlay");
+            imgWrapper.classList.remove("grow");
+            imgWrapper.classList.remove("overlay");
+            overlay.classList.remove("opacity-90");
+        }
+
+        function exitHover(el) {
+            if (el.matches(":hover")) return;
+            const imgWrapper = el.querySelector(".card-img-wrapper")
+            const overlay = el.querySelector(".black-overlay")
+            imgWrapper.classList.add("grow")
+            imgWrapper.classList.add("overlay")
+            overlay.classList.add("opacity-90")
+        }
+    </script>
+    <script>{% include 'core/JS/search.js' %}</script>
+    <script>{% include 'core/JS/sidebar.js' %}</script>
+{% endblock %}

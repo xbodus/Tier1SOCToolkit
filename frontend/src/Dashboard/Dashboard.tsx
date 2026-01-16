@@ -77,24 +77,37 @@ export default function Dashboard() {
 
     return (
         <>
-            {!simulation &&  (<Simulations handleSim={handleSimulation} />)}
+            {!simulation &&  (
+                <section id='react-dashboard' style={{ height: "100%", width: "100%"}}>
+                    <h1 className="siem-lab-label">Rouge Operations Security Center</h1>
+                    <section className="siem-lab-content">
+                        <Simulations handleSim={handleSimulation} />
+                    </section>
+                    <section id="routing">
+                        <div className={"flex flex-column"}>
+                            <SIEMNav content={content} setContent={setContent} />
+                        </div>
+                        <a href="/"><button className="siem-lab-exit">Leave Lab</button></a>
+                    </section>
+                </section>
+            )}
             {simulation && (
-            <section id='react-dashboard' style={{ height: "100%", width: "100%"}}>
-                <h1 className="siem-lab-label">Rouge Operations Security Center</h1>
-                <section className="siem-lab-content">
-                    <Suspense fallback={<p style={{ color: "#39ff14" }}>Loading…</p>}>
-                        {VIEWS[content]}
-                    </Suspense>
-                </section>
+                <section id='react-dashboard' style={{ height: "100%", width: "100%"}}>
+                    <h1 className="siem-lab-label">Rouge Operations Security Center</h1>
+                    <section className="siem-lab-content">
+                        <Suspense fallback={<p style={{ color: "#39ff14" }}>Loading…</p>}>
+                            {VIEWS[content]}
+                        </Suspense>
+                    </section>
 
-                <section id="routing">
-                    <div className={"flex flex-column"}>
-                        <SIEMNav content={content} setContent={setContent} />
-                    </div>
-                    <ResetDashboard />
-                    <a href="/"><button className="siem-lab-exit">Leave Lab</button></a>
+                    <section id="routing">
+                        <div className={"flex flex-column"}>
+                            <SIEMNav content={content} setContent={setContent} />
+                        </div>
+                        <ResetDashboard />
+                        <a href="/"><button className="siem-lab-exit">Leave Lab</button></a>
+                    </section>
                 </section>
-            </section>
             )}
             <div id="crt-overlay"></div>
         </>

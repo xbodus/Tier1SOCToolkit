@@ -4,11 +4,14 @@ import time
 import os
 from dotenv import load_dotenv
 
+from django_ratelimit.decorators import ratelimit
+from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest, StreamingHttpResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from watson import search as watson_search
 
 from datetime import datetime
 import ipaddress
@@ -18,11 +21,11 @@ from django.views.decorators.http import require_GET
 
 from elasticsearch import Elasticsearch
 
+from .models import Article, Resource, ArticlesCategory
 from .toolkit.Simulations.brute_force_sim import start_brute_force_simulation
 from .toolkit.Simulations.dos_sim import start_dos_simulation
 from .toolkit.Simulations.normal_traffic import start_normal_traffic
 from .toolkit.Simulations.sqli_sim import start_sqli_simulation
-from .toolkit.port_scanner import threaded_port_scan
 from .toolkit.ip_reputation_checker import ip_check
 from .toolkit.utils import is_valid_target
 from .toolkit.log_analyzer import analyze_log
@@ -39,19 +42,136 @@ es = Elasticsearch(
     basic_auth=("elastic", os.getenv("ES_PASSWORD"))
 )
 
-
+@ratelimit(key='ip', rate='20/m', method='GET')
 def home(request):
-    return render(request, 'core/partials/nav.html')
+    return render(request, 'core/home.html')
 
-
+@ratelimit(key='ip', rate='20/m', method='GET')
 def lab(request):
     return render(request, 'core/soc_lab.html')
 
+@ratelimit(key='ip', rate='20/m', method='GET')
+def articles_list(request):
+    articles = Article.objects.filter(status='published')
+    categories = ArticlesCategory.objects.all().order_by('id')
+    difficulty = [d[1] for d in Article.DIFFICULTY_CHOICES]
 
-def blog(request):
-    return render(request, 'core/blog.html')
+    search_query = request.GET.get('q', '')
+    category_slug = request.GET.get('category', '')
+    difficulty_slug = request.GET.get('difficulty', '')
+    read_time = request.GET.get('read_time', '')
+
+    # Apply search
+    if search_query:
+        search_results = watson_search.search(search_query, models=(Article,))
+        article_ids = [result.object.id for result in search_results]
+        articles = articles.filter(id__in=article_ids)
+
+    # Apply category filter
+    if category_slug:
+        articles = articles.filter(category__slug=category_slug)
+
+    # Apply difficulty filter
+    if difficulty_slug:
+        articles = articles.filter(difficulty=difficulty_slug)
+
+    # Apply read time filter
+    if read_time:
+        if read_time == 'short':
+            articles = articles.filter(read_time__lte=5)
+        elif read_time == 'medium':
+            articles = articles.filter(read_time__gt=5, read_time__lte=15)
+        elif read_time == 'long':
+            articles = articles.filter(read_time__gt=15)
+
+    p = Paginator(articles, 15)
+    page_number = request.GET.get("page")
+    page_obj = p.get_page(page_number)
+
+    context = {
+        'articles': page_obj,
+        'categories': categories,
+        'current_category': category_slug,
+        'current_difficulty': difficulty,
+        'current_read_time': read_time,
+        'difficulty': difficulty,
+    }
+
+    return render(request, 'core/articles.html', context)
+
+@ratelimit(key='ip', rate='20/m', method='GET')
+def article_search_suggestions(request):
+    query = request.GET.get('q', '').strip()
+
+    if len(query) < 2:  # Don't search for single characters
+        return JsonResponse({'results': []})
+
+    # Search with Watson
+    search_results = watson_search.search(
+        query,
+        models=(Article,),
+        ranking=True
+    )
+
+    # Limit to top 5 results for autocomplete
+    results = []
+    for result in search_results[:5]:
+        article = result.object
+        if article.status == 'published':
+            results.append({
+                'title': article.title,
+                'slug': article.slug,
+                'excerpt': article.excerpt[:100] + '...' if len(article.excerpt) > 100 else article.excerpt,
+                'url': article.get_absolute_url(),
+                'category': article.category.name if article.category else None,
+                'difficulty': article.get_difficulty_display() if article.difficulty else None,
+                'read_time': article.read_time,
+            })
+
+    if not results:
+        # Suggest popular articles or categories
+        popular = Article.objects.filter(status='published').order_by('-published_date')[:3]
+        results.append({
+            'suggestions': [
+                {
+                    'title': a.title,
+                    'url': a.get_absolute_url()
+                } for a in popular
+            ],
+            'message': f"No results for '{query}'. Try these instead:"
+        })
+
+    return JsonResponse({'results': results})
 
 
+@ratelimit(key='ip', rate='20/m', method='GET')
+def article_detail(request, slug):
+    article = Article.objects.get(slug=slug)
+    suggestion_articles = Article.objects.filter(status='published').order_by('-published_date')[:5]
+
+    suggestions = [a for a in suggestion_articles if a.title != article.title][:3]
+
+    context = {
+        'article': article,
+        'suggestions': suggestions,
+    }
+
+    return render(request, 'core/article_detail.html', context )
+
+
+@ratelimit(key='ip', rate='20/m', method='GET')
+def resources(request):
+    # resources = Resource.objects.filter(status='published')
+    return render(request, 'core/resources.html')
+
+
+@ratelimit(key='ip', rate='20/m', method='GET')
+def about(request):
+    return render(request, 'core/about.html')
+
+"""
+    LAB API Endpoints
+"""
 def get_session_key(request):
     if not request.session.session_key:
         request.session.create()
@@ -66,6 +186,7 @@ def dos_worker(session_key, start_key):
     time.sleep(60)
     start_dos_simulation(session_key, start_key)
 
+@ratelimit(key='ip', rate='20/m', method='GET')
 def dos_simulation(request):
     session_key = get_session_key(request)
 
@@ -100,6 +221,7 @@ def brute_force_worker(session_key, start_key):
     time.sleep(60)
     start_brute_force_simulation(session_key, start_key)
 
+@ratelimit(key='ip', rate='20/m', method='GET')
 def brute_force_simulation(request):
     session_key = get_session_key(request)
 
@@ -135,6 +257,7 @@ def sqli_worker(session_key, start_key):
     time.sleep(60)
     start_sqli_simulation(session_key, start_key)
 
+@ratelimit(key='ip', rate='20/m', method='GET')
 def sqli_simulation(request):
     session_key = get_session_key(request)
 
@@ -176,6 +299,7 @@ def check_rate_limit(request):
     cache.set(cache_key, request_count + 1, 60)
     return False
 
+
 def ip_reputation(request):
     rate_limit = check_rate_limit(request)
     if rate_limit:
@@ -210,6 +334,7 @@ def ip_reputation(request):
 
 
 # Request logs from session time range and send to React client for download
+@ratelimit(key='ip', rate='20/m', method='GET')
 def download_logs(request):
     start = request.GET.get("start")
     end = request.GET.get("end")
@@ -333,6 +458,7 @@ def log_ingestion(request):
     return JsonResponse({"status": "ok"})
 
 
+@ratelimit(key='ip', rate='20/m', method='GET')
 @require_GET
 def request_logs(request):
     print("Starting request")

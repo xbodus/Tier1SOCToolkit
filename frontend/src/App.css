@@ -2,55 +2,9 @@
     box-sizing: border-box;
 }
 
-body, html {
-    margin: 0;
-    padding: 0;
+main {
     height: 100dvh;
     width: 100dvw;
-    background-color: #000;
-}
-
-.navigation {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 2rem;
-    font-family: "Google Sans", sans-serif;
-    color: #fff;
-}
-
-.navigation > div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    height: 100%;
-}
-
-.navigation > div > h1 {
-    font-size: 2.5rem;
-}
-
-.navigation-links {
-    display: flex;
-    gap: 20px;
-    list-style: none;
-    font-family: "Google Sans", sans-serif;
-    font-weight: 100;
-    font-size: 1.25rem;
-}
-
-.navigation-links > li > a {
-    color: #fff;
-    text-decoration: none;
-}
-
-.navigation-links > li > a:hover {
-    opacity: 50%;
-}
-
-.navigation-links > li > a:visited {
-    color: #fff;
 }
 
 /* dashboard */
@@ -93,6 +47,7 @@ body, html {
     color: #39ff14;
     font-size: 2rem;
     text-align: center;
+    margin: 0;
 }
 
 .sim-control {
@@ -623,6 +578,10 @@ a:hover {
 
 .pointer {
     cursor: pointer;
+}
+
+.z-100 {
+    z-index: 100;
 }
 
 
