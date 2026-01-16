@@ -1,63 +1,25 @@
 {% extends "core/base.html" %}
 
-{% block title %}Rouge Operations - Home{% endblock %}
-
-{% block styling %}
-    <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-        </style>
-{% endblock %}
-
+{% block title %}{% endblock %}
 
 {% block content %}
     {% include "core/partials/nav.html" %}
-    <div id="hero">
-        <canvas id="canvas"></canvas>
-        <div class="fade-overlay"></div>
+    <div id="background" class="background-wrapper">
+        <canvas id="canvas" style="position: absolute;"></canvas>
         <div class="fade-overlay-2"></div>
-        <div class="glass3d hero-cta">
-            <h2>
-                Learn.<span class="accent-color">Grow.</span>Repeat.
-            </h2>
-            <p>Be a part of your own growth</p>
-            <div class="flex gap-30">
-                <a href="{% url 'lab' %}"><button class="btn main-btn glass3d-green"><span>Labs</span></button></a>
-                <a href="{% url 'home' %}"><button class="btn accent-btn glass3d"><span>Resources</span></button></a>
-            </div>
-        </div>
+        <div class="fade-overlay"></div>
+        {% block extended_content %}{% endblock %}
     </div>
-
-    <section class="content">
-        <div class="flex flex-column gap-30 w-50">
-            <h3 class="subtitle">Stay up to Date</h3>
-            <p class="subtext">Never forget, half the battle is knowing. Stay up to date on the latest security trends and information</p>
-            <div class="graphic-container">Security Breach Statistics Graphic</div>
-        </div>
-        <div class="flex w-90 gap-30">
-            <div class="news-container"><span>Security News</span></div>
-            <div class="news-container"><span>Tech News</span></div>
-        </div>
-    </section>
-    <section class="footer-transition">
-        <canvas id="canvas-2"></canvas>
-        <div class="fade-overlay-3"></div>
-        <div class="hero-cta">
-            <h3 class="subtitle">Need help on your journey?</h3>
-        </div>
-    </section>
+    {% include "core/partials/footer.html" %}
 {% endblock %}
 
-
 {% block script %}
+    {% block extended_scripts %}{% endblock %}
     <script>
-        const canvas = document.getElementById('canvas');
-        const canvas2 = document.getElementById('canvas-2');
+        const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext('2d');
-        const ctx2 = canvas2.getContext('2d');
+
+        const background = document.getElementById("background");
 
         let dots = [];
         let pulses = [];
@@ -69,37 +31,16 @@
         let mouseY = -1000;
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            canvas2.width = window.innerWidth;
-            canvas2.height = window.innerHeight;
+            const box = background.getBoundingClientRect()
+            canvas.width = box.width;
+            canvas.height = box.height;
             initGrid();
-            initGrid2();
         }
 
         function initGrid() {
             dots = [];
             const cols = Math.ceil(canvas.width / gridSpacing) + 1;
             const rows = Math.ceil(canvas.height / gridSpacing) + 1;
-
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    dots.push({
-                        x: col * gridSpacing,
-                        y: row * gridSpacing,
-                        col: col,
-                        row: row,
-                        baseOpacity: 0.1,
-                        glowIntensity: 0
-                    });
-                }
-            }
-        }
-
-        function initGrid2() {
-            dots = [];
-            const cols = Math.ceil(canvas2.width / gridSpacing) + 1;
-            const rows = Math.ceil(canvas2.height / gridSpacing) + 1;
 
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
@@ -245,9 +186,6 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx2.fillStyle = '#000';
-            ctx2.fillRect(0, 0, canvas.width, canvas.height);
-
             // Decay glow
             dots.forEach(dot => {
                 dot.glowIntensity *= 0.85;
@@ -261,20 +199,10 @@
                 // Draw glow
                 if (dot.glowIntensity > 0.05) {
                     const glowRadius = dotRadius + (dot.glowIntensity * 15); // Bigger glow
-                    {#const gradient = ctx.createRadialGradient(dot.x, dot.y, 0, dot.x, dot.y, glowRadius);#}
-                    {#gradient.addColorStop(0, glowColor);#}
-                    {#gradient.addColorStop(0.4, `rgba(57, 255, 20, ${dot.glowIntensity * 0.5})`);#}
-                    {#gradient.addColorStop(1, 'rgba(57, 255, 20, 0)');#}
-
                     ctx.fillStyle = baseColor;
                     ctx.beginPath();
                     ctx.arc(dot.x, dot.y, glowRadius, 0, Math.PI * 2);
                     ctx.fill();
-
-                    ctx2.fillStyle = baseColor;
-                    ctx2.beginPath();
-                    ctx2.arc(dot.x, dot.y, glowRadius, 0, Math.PI * 2);
-                    ctx2.fill();
                 }
 
                 // Draw base dot
@@ -282,11 +210,6 @@
                 ctx.beginPath();
                 ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
                 ctx.fill();
-
-                ctx2.fillStyle = dot.glowIntensity > 0.3 ? glowColor : baseColor;
-                ctx2.beginPath();
-                ctx2.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
-                ctx2.fill();
             });
         }
 
@@ -381,39 +304,6 @@
 
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-
-            const col = Math.round(clickX / gridSpacing);
-            const row = Math.round(clickY / gridSpacing);
-
-            createPulse(col, row, 1);
-            createPulse(col, row, -1);
-        });
-
-        canvas2.addEventListener('mousemove', (e) => {
-            const rect = canvas2.getBoundingClientRect();
-            mouseX = e.clientX - rect.left;
-            mouseY = e.clientY - rect.top;
-
-            const hoverRadius = gridSpacing * 3; // 3 dot radius
-
-            dots.forEach(dot => {
-                const distance = Math.sqrt(
-                    Math.pow(dot.x - mouseX, 2) +
-                    Math.pow(dot.y - mouseY, 2)
-                );
-
-                if (distance < hoverRadius) {
-                    // Closer dots glow brighter (inverse relationship with distance)
-                    const intensity = 1 - (distance / hoverRadius);
-                    dot.glowIntensity = Math.max(dot.glowIntensity, intensity * 0.8);
-                }
-            });
-        });
-
-        canvas2.addEventListener('click', (e) => {
-            const rect = canvas2.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
 

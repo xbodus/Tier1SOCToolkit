@@ -11,7 +11,7 @@ export default defineConfig({
   root: resolve(__dirname),
   base: "/static",
   build: {
-    outDir: resolve(__dirname, "../static/dist"),
+    outDir: resolve(__dirname, "../static"),
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {
@@ -21,6 +21,7 @@ export default defineConfig({
     }
   },
   server: {
+    host: "0.0.0.0",
     port: 5173,
     strictPort: true,
     proxy: {

@@ -1,0 +1,44 @@
+<aside id="filter" class="sidebar">
+    <div class="sticky">
+        <h3 class="border-bottom-2">Filters</h3>
+        <div id="categories-container">
+            <h4 class="pointer">Subject</h4>
+            <div class="dropdown-content">
+                <div class="dropdown">
+                    <ul class="options-list">
+                        {% for field in categories %}
+                            <li class="option"><a href="?category={{ field.slug }}">{{ field }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="difficulties-container">
+            <h4 class="pointer">Difficulty</h4>
+            <div class="dropdown-content">
+                <div class="dropdown">
+                    <ul class="options-list">
+                        {% for level in difficulty %}
+                            <li class="option"><a href="?difficulty={{ level | lower }}">{{ level }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="read-time-container">
+            <h4 class="pointer">Read Time</h4>
+            <div class="dropdown-content">
+                <div class="dropdown">
+                    <ul class="options-list">
+                        <li class="option"><a href="?read_time=short" class="{% if current_read_time == 'short' %}active{% endif %}">Quick Read (&lt;5 min)</a></li>
+                        <li class="option"><a href="?read_time=medium" class="{% if current_read_time == 'medium' %}active{% endif %}">Medium (5-15 min)</a></li>
+                        <li class="option"><a href="?read_time=long" class="{% if current_read_time == 'long' %}active{% endif %}">Long Read (15+ min)</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% if current_category or current_difficulty or current_read_time or search_query %}
+            <a href="{% url 'articles' %}" class="reset-link"><button class="clear-filters">Clear All Filters</button></a>
+        {% endif %}
+    </div>
+</aside>

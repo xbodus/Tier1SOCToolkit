@@ -1,0 +1,47 @@
+{% extends "core/base_page.html" %}
+
+{% block title %}Rouge Operations - Article Detail{% endblock %}
+
+{% block extended_content %}
+    <section class="article-wrapper">
+        <a href="{% url "articles" %}" class="back-btn-link">
+            <button class="go-back-btn">
+                <span class="arrow-container">
+                    <span class="back-arrow">&larr;</span>
+                </span>
+                Go Back
+            </button>
+        </a>
+        <div class="article-img-wrapper">
+            <img src="../media/{{ article.featured_image }}" alt="Globe" />
+        </div>
+        <div class="article-details">
+            <p>Created By: {{ article.author.first_name }} {{ article.author.last_name }}</p>
+            <p>{{ article.category }}</p>
+            <p>{{ article.created_date }}</p>
+        </div>
+        <div class="article-content-wrapper">
+            <h3 class="article-title center">{{ article.title }}</h3>
+            {{ article.content|safe }}
+        </div>
+    </section>
+    <h3 class="article-suggestions-title">More to Discover</h3>
+    <section id="suggestions" class="suggestions-wrapper">
+        {% for article in suggestions %}
+            <a href="/articles/{{ article.slug }}" class="suggestion-wrapper">
+                <div class="suggestion-item">
+                    <div class="flex justify-between">
+                        <p>{{ article.title }}</p>
+                        <p>{{ article.read_time }} min read</p>
+                    </div>
+                    <div class="suggestion-img-wrapper">
+                        <img src="../media/{{ article.featured_image }}" alt="Suggestion Image" />
+                    </div>
+                    <p>{{ article.created_date }}</p>
+                    <p>{{ article.excerpt }}</p>
+                </div>
+            </a>
+        {% endfor %}
+    </section>
+    <div class="spacer"></div>
+{% endblock %}
